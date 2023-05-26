@@ -16,16 +16,22 @@ export class PlayerInputController {
             const direction = this.keyToDirectionMap[event.key]
             if (direction && !this.pks.includes(direction)) {
                 this.pks.push(direction)
-                this.publish(`move_${direction}`)
-                // Logger.debug(this.pks);
+                const input = {
+                    type: 'move',
+                    value: direction
+                }
+                this.publish(input)
             }
         }
         document.onkeyup = (event) => {
             const direction = this.keyToDirectionMap[event.key]
             if (direction) {
                 this.pks = this.pks.filter(dir => dir !== direction)
-                this.publish(`move_${this.pks.at(-1)}`)
-                // Logger.debug(this.pks);
+                const input = {
+                    type: 'move',
+                    value: this.pks.at(-1)
+                }
+                this.publish(input)
             }
         }
     }

@@ -1,65 +1,43 @@
-import { Logger } from "./util/logger.mjs";
-
 export class GameStateEngine {
     constructor() {
+        this.gameHeight = 400
+        this.gameWidth = 800
         this.subscriptions = []
         this.inputQueue = []
         this.gameState = {
-            units: [
-                {
-                    id: 'Michael',
-                    x: 50,
-                    y: 50,
-                    speed: {
-                        distance: 1000,
-                        time: 1000
-                    },
-                    direction: 'none'
-                }
-            ]
+            players: []
         }
     }
 
     update(delta) {
         while(this.inputQueue.length) {
             const input = this.inputQueue.shift()
-            if (input === 'move_up'){
-                this.gameState.units[0].direction = 'up'
-            }
-            if (input === 'move_right'){
-                this.gameState.units[0].direction = 'right'
-            }
-            if (input === 'move_down'){
-                this.gameState.units[0].direction = 'down'
-            }
-            if (input === 'move_left'){
-                this.gameState.units[0].direction = 'left'
-            }
-            if (input === 'move_none'){
-                this.gameState.units[0].direction = 'none'
+            const player = this.gameState.players.find(player => player.id === input.playerId)
+            if (input.type === 'move') {
+                player.direction = input.value
             }
         }
-        this.gameState.units.forEach(unit => {
-            unit = this.updateUnit(unit, delta)
+        this.gameState.players.forEach(player => {
+            this.updatePlayer(player, delta)
         });
         this.publish()
     }
 
-    updateUnit(unit, delta) {
-        if (['up', 'right', 'down', 'left'].includes(unit.direction)) {
-            const dist = (unit.speed.distance * delta) / unit.speed.time
-            switch(unit.direction) {
+    updatePlayer(player, delta) {
+        if (['up', 'right', 'down', 'left'].includes(player.direction)) {
+            const dist = (player.speed.distance * delta) / player.speed.time
+            switch(player.direction) {
                 case 'up':
-                    unit.y += dist
+                    player.y += dist
                     break;
                 case 'right':
-                    unit.x += dist
+                    player.x += dist
                     break;
                 case 'down':
-                    unit.y -= dist
+                    player.y -= dist
                     break;
                 case 'left':
-                    unit.x -= dist
+                    player.x -= dist
                     break;
             }
         }
@@ -73,6 +51,36 @@ export class GameStateEngine {
         this.subscriptions.forEach(subscription => {
             subscription(this.gameState)
         })
+    }
+
+    addPlayer(playerId) {
+        const width = 50
+        this.gameState.players.push({
+            id: playerId,
+            color: this.getRandomColor(),
+            width,
+            x: this.getRandomIntInclusive(width, this.gameWidth - width),
+            y: this.getRandomIntInclusive(width, this.gameHeight - width),
+            speed: {
+                distance: 500,
+                time: 1000
+            },
+            direction: 'none'
+        })
+    }
+
+    removePlayer(playerId) {
+        this.gameState.players = this.gameState.players.filter(player => player.id !== playerId)
+    }
+
+    getRandomColor(){
+        return '#' + ['r', 'g', 'b'].map(_ => this.getRandomIntInclusive(50, 200).toString(16)).join('')
+    }
+
+    getRandomIntInclusive(min, max) {
+        min = Math.ceil(min);
+        max = Math.floor(max);
+        return Math.floor(Math.random() * (max - min + 1) + min); // The maximum is inclusive and the minimum is inclusive
     }
 
 

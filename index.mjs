@@ -10,21 +10,16 @@ const clientGameEngine = new ClientGameEngine(gameStateEngine, renderingEngine)
 
 const ws = new WebSocket("ws://localhost:8070");
 ws.addEventListener("open", () =>{
-    // console.log("We are connected");
-    // ws.send("How are you?");
+    // Logger.info("We are connected");
 });
 
 ws.addEventListener('message', function (event) {
-    // console.log(event.data)
     gameStateEngine.gameState = JSON.parse(event.data)
 });
 
-Logger.info("Client has started.")
-
 const playerInputController = new PlayerInputController()
 playerInputController.registerSubscription((playerInput) => {
-    Logger.debug(`subscription was triggered for command: '${playerInput}'`)
-    ws.send(playerInput)
+    ws.send(JSON.stringify(playerInput))
 })
 
 clientGameEngine.start()
