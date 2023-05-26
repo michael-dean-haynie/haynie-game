@@ -1,8 +1,12 @@
 import { Logger} from "../shared/util/logger.mjs";
 
-// inspiration: https://timetocode.tumblr.com/post/71512510386/an-accurate-node-js-game-loop-inbetween-settimeout-and
-export class GameServerEngine {
-    constructor() {
+/**
+ * TODO: esplain - this is the engine that drives the server, what it's responsible for
+ * inspiration: https://timetocode.tumblr.com/post/71512510386/an-accurate-node-js-game-loop-inbetween-settimeout-and
+ */
+export class ServerGameEngine {
+    constructor(gameStateEngine) {
+        this.gameStateEngine = gameStateEngine
         // Length of a tick in milliseconds. The denominator is your desired framerate.
         // e.g. 1000 / 20 = 20 fps,  1000 / 60 = 60 fps
         this.tickLengthMs = 1000 / 60
@@ -10,7 +14,7 @@ export class GameServerEngine {
 
         // The margin of error that setTimeout may experience. (suggested 16, tweak-able, depends on os/cpu)
         this.timeoutMarginOfErrorMs = 4
-        this.previousTick = Date.now()
+        this.previousTickTs = Date.now()
 
         // Metrics
         this.gameLoopInvocations = 0
@@ -19,24 +23,24 @@ export class GameServerEngine {
 
 
         // Testing Options
-        this.maxTicks = 120
+        this.maxTicks = null
     }
 
     start() {
-        Logger.info("Starting NodeServerEngine");
-        this.gameLoop()
+        Logger.info("Starting ServerGameEngine");
+        setImmediate(this.gameLoop.bind(this))
     }
 
     gameLoop() {
         const now = Date.now()
 
         this.gameLoopInvocations++
-        // Logger.verbose(`Entering NodeServerEngine.gameLoop() [ts=${now}]`)
+        // Logger.verbose(`Entering ServerGameEngine.gameLoop() [ts=${now}]`)
 
 
-        if (this.previousTick + this.tickLengthMs <= now) {
-            const delta = (now - this.previousTick)
-            this.previousTick = now
+        if (this.previousTickTs + this.tickLengthMs <= now) {
+            const delta = (now - this.previousTickTs)
+            this.previousTickTs = now
 
             this.tick++
             this.update(delta)
@@ -53,7 +57,7 @@ export class GameServerEngine {
             }
         }
 
-        if (now - this.previousTick < this.tickLengthMs - this.timeoutMarginOfErrorMs) {
+        if (now - this.previousTickTs < this.tickLengthMs - this.timeoutMarginOfErrorMs) {
             this.setTimeouts++
             setTimeout(this.gameLoop.bind(this))
         } else {
@@ -63,7 +67,7 @@ export class GameServerEngine {
     }
 
     update(delta) {
-        Logger.verbose(`Entering NodeServerEngine.update() [tick=${this.tick}, delta=${delta}]`)
-        // update game state
+        Logger.verbose(`Entering ServerGameEngine.update() [tick=${this.tick}, delta=${delta}]`)
+        this.gameStateEngine.update(delta);
     }
 }
