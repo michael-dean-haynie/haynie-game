@@ -1,2 +1,9 @@
+# IDE / Editor
 .idea/
+
+# Node / NPM
 node_modules/
+
+# Parcel
+.parcel-cache/
+dist/

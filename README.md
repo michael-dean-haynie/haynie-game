@@ -16,10 +16,10 @@ npm install
 npm run start-server
 
 # in another terminal window, start the client server
-npm run start-client-server
+npm run start-client
 ```
 
-Open a browser tab and navigate to `localhost:8080`.
+Open a browser tab and navigate to `localhost:1234`.
 
 ## Reference
 - https://www.gabrielgambetta.com/client-side-prediction-live-demo.html
