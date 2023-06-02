@@ -1,7 +1,9 @@
+import { config } from "./config.mjs"
+
 export class GameStateEngine {
     constructor() {
-        this.gameHeight = 400
-        this.gameWidth = 800
+        this.gameHeight = config.gameHeight
+        this.gameWidth = config.gameHeight
         this.subscriptions = []
         this.inputQueue = []
         this.gameState = {

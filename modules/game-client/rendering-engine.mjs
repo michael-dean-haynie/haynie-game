@@ -1,11 +1,16 @@
+import { config } from "../shared/config.mjs";
+
 export class RenderingEngine {
     constructor(canvas) {
         this.canvas = canvas
         this.context = canvas.getContext('2d')
+
+        this.canvas.width = config.gameWidth
+        this.canvas.height = config.gameHeight
     }
 
     render(gameState) {
-        this.context.clearRect(0,0, canvas.width, canvas.height)
+        this.context.clearRect(0,0, this.canvas.width, this.canvas.height)
         gameState.players.forEach(player => {
             this.context.fillStyle = player.color
             const x = player.x - (player.width / 2)
