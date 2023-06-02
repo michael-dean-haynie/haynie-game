@@ -28,6 +28,7 @@ wss.on("connection", ws => {
         const data = dataBuffer.toString('utf8')
         const input = JSON.parse(data)
         input.playerId = connectionId
+        input.timestamp = Date.now()
         gameStateEngine.inputQueue.push(input)
     });
 

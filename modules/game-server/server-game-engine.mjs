@@ -39,11 +39,12 @@ export class ServerGameEngine {
 
 
         if (this.previousTickTs + this.tickLengthMs <= now) {
-            const delta = (now - this.previousTickTs)
+            const msSinceLastTick = (now - this.previousTickTs)
+            const lastTickTs = this.previousTickTs
             this.previousTickTs = now
 
             this.tick++
-            this.update(delta)
+            this.update(lastTickTs, now)
 
             // testing feedback
             if (this.maxTicks && this.tick >= this.maxTicks) {
@@ -66,8 +67,8 @@ export class ServerGameEngine {
         }
     }
 
-    update(delta) {
-        Logger.verbose(`Entering ServerGameEngine.update() [tick=${this.tick}, delta=${delta}]`)
-        this.gameStateEngine.update(delta);
+    update(lastTickTs, currentTickTs) {
+        Logger.verbose(`Entering ServerGameEngine.update() [tick=${this.tick}, lastTickTs=${lastTickTs}, currentTickTs=${currentTickTs}]`)
+        this.gameStateEngine.update(lastTickTs, currentTickTs);
     }
 }

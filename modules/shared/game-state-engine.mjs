@@ -3,7 +3,7 @@ import { config } from "./config.mjs"
 export class GameStateEngine {
     constructor() {
         this.gameHeight = config.gameHeight
-        this.gameWidth = config.gameHeight
+        this.gameWidth = config.gameWidth
         this.subscriptions = []
         this.inputQueue = []
         this.gameState = {
@@ -11,38 +11,107 @@ export class GameStateEngine {
         }
     }
 
-    update(delta) {
+    update(lastTickTs, currentTickTs) {
+        // timestamp to which the game state has been updated so far
+        let lastUpdateTs = lastTickTs
         while(this.inputQueue.length) {
             const input = this.inputQueue.shift()
             const player = this.gameState.players.find(player => player.id === input.playerId)
+
+            // ms between this input and the latest ts to which the game state has been updated
+            const msFromLastUpdateToInput = input.timestamp - lastUpdateTs
+
+            // update discrete game state
             if (input.type === 'move') {
+                // adjust the direction the player is moving
                 player.direction = input.value
             }
+
+            // actually advance game state
+            this.advanceContinuousState(msFromLastUpdateToInput)
+
+            // update the timestamp to which the game state has been updated so far
+            lastUpdateTs = input.timestamp
         }
-        this.gameState.players.forEach(player => {
-            this.updatePlayer(player, delta)
-        });
+
+        // advance state for any remaining time between last input and current tick timestamp
+        const msFromLastUpdateToCurrentTick = currentTickTs - lastUpdateTs
+        if (msFromLastUpdateToCurrentTick > 0) {
+            this.advanceContinuousState(msFromLastUpdateToCurrentTick)
+        }
+
+        // publish updates to clients
         this.publish()
     }
 
-    updatePlayer(player, delta) {
+    advanceContinuousState(msDuration) {
+        // advance all player positions
+        this.gameState.players.forEach(player => {
+            this.updatePlayer(player, msDuration)
+        });
+    }
+
+    updatePlayer(player, msDuration) {
+        const projectedPosition = this.projectPlayerPosition(player, msDuration)
+        const correctedPosition = this.detectCollisionAndCorrectProjection(player, projectedPosition)
+        player.x = correctedPosition.x
+        player.y = correctedPosition.y
+    }
+
+    // calculate where player will move to if no collisions happen
+    projectPlayerPosition(player, msDuration) {
+        const newPosition = {
+            x: player.x,
+            y: player.y
+        }
+
         if (['up', 'right', 'down', 'left'].includes(player.direction)) {
-            const dist = (player.speed.distance * delta) / player.speed.time
+            const dist = (player.speed.distance * msDuration) / player.speed.time
             switch(player.direction) {
                 case 'up':
-                    player.y += dist
+                    newPosition.y += dist
                     break;
                 case 'right':
-                    player.x += dist
+                    newPosition.x += dist
                     break;
                 case 'down':
-                    player.y -= dist
+                    newPosition.y -= dist
                     break;
                 case 'left':
-                    player.x -= dist
+                    newPosition.x -= dist
                     break;
             }
         }
+
+        return newPosition
+    }
+
+    detectCollisionAndCorrectProjection(player, projectedPosition) {
+        const correctedPosition = {
+            x: projectedPosition.x,
+            y: projectedPosition.y
+        }
+
+        // detect collision with map bounds
+        const minX = player.width / 2
+        const maxX = this.gameWidth - (player.width / 2)
+        const minY = player.width / 2
+        const maxY = this.gameHeight - (player.width / 2)
+
+        if (projectedPosition.x < minX) {
+            correctedPosition.x = minX
+        }
+        if (projectedPosition.x > maxX) {
+            correctedPosition.x = maxX
+        }
+        if (projectedPosition.y < minY) {
+            correctedPosition.y = minY
+        }
+        if (projectedPosition.y > maxY) {
+            correctedPosition.y = maxY
+        }
+
+        return correctedPosition
     }
 
     registerSubscription(subscription) {
