@@ -15,6 +15,7 @@ export class RenderingEngine {
             ticks: 0,
             aps: 0,
             ups: 0,
+            ping: 0
         }
     }
 

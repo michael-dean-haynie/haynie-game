@@ -20,10 +20,11 @@ wss.on("connection", ws => {
     gameStateEngine.addPlayer(connectionId)
 
     // publish gameState updates to client
-    gameStateEngine.registerSubscription((gameState) => {
+    gameStateEngine.registerSubscription((gameState, clientPingTsMap) => {
         ws.send(JSON.stringify({
             type: 'game-state-update',
-            value: gameState
+            value: gameState,
+            clientPingTs: clientPingTsMap.get(connectionId)
         }))
     })
 

@@ -9,17 +9,25 @@ export class GameStateEngine {
         this.gameState = {
             players: []
         }
-        this.stateHasChanges = false
+        this.stateHasChanged = true
+        this.clientPingTsMap = new Map()
     }
 
     update(lastTickTs, currentTickTs) {
-        this.stateHasChanged = false
+        this.clientPingTsMap.clear()
 
         // timestamp to which the game state has been updated so far
         let lastUpdateTs = lastTickTs
         while(this.inputQueue.length) {
             const input = this.inputQueue.shift()
             const player = this.gameState.players.find(player => player.id === input.playerId)
+
+            // remember the earliest client ping timestamp that came in since the last update
+            if(!this.clientPingTsMap.has(player.id)) {
+                this.clientPingTsMap.set(player.id, input.clientPingTs)
+            } else if (this.clientPingTsMap.get(player.id) > input.clientPingTs) {
+                this.clientPingTsMap.set(player.id, input.clientPingTs)
+            }
 
             // ms between this input and the latest ts to which the game state has been updated
             const msFromLastUpdateToInput = input.timestamp - lastUpdateTs
@@ -188,9 +196,10 @@ export class GameStateEngine {
     publish() {
         if (this.stateHasChanged) {
             this.subscriptions.forEach(subscription => {
-                subscription(this.gameState)
+                subscription(this.gameState, this.clientPingTsMap)
             })
         }
+        this.stateHasChanged = false
     }
 
     addPlayer(playerId) {
@@ -207,10 +216,12 @@ export class GameStateEngine {
             },
             direction: 'none'
         })
+        this.stateHasChanged = true
     }
 
     removePlayer(playerId) {
         this.gameState.players = this.gameState.players.filter(player => player.id !== playerId)
+        this.stateHasChanged = true
     }
 
     getRandomColor(){
