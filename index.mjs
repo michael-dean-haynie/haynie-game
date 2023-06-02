@@ -3,6 +3,7 @@ import { ClientGameEngine } from "./modules/game-client/client-game-engine.mjs";
 import { PlayerInputController } from "./modules/game-client/player-input-controller.mjs";
 import {GameStateEngine} from "./modules/shared/game-state-engine.mjs";
 import {RenderingEngine} from "./modules/game-client/rendering-engine.mjs";
+import {SmoothDiagnostic} from "./modules/shared/util/smooth-diagnostic.mjs";
 
 const gameStateEngine = new GameStateEngine()
 const renderingEngine = new RenderingEngine(document.getElementById('canvas'))
@@ -15,6 +16,7 @@ ws.addEventListener("open", () =>{
 
 ws.addEventListener('message', function (event) {
     const serverUpdate = JSON.parse(event.data)
+    clientGameEngine.newUpdates++
     if (serverUpdate.type === 'game-state-update') {
         gameStateEngine.gameState = serverUpdate.value
     }

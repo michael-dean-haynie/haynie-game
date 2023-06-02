@@ -13,7 +13,8 @@ export class RenderingEngine {
             frames: 0,
             tps: 0,
             ticks: 0,
-            aps: 0
+            aps: 0,
+            ups: 0,
         }
     }
 

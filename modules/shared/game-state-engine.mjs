@@ -9,9 +9,12 @@ export class GameStateEngine {
         this.gameState = {
             players: []
         }
+        this.stateHasChanges = false
     }
 
     update(lastTickTs, currentTickTs) {
+        this.stateHasChanged = false
+
         // timestamp to which the game state has been updated so far
         let lastUpdateTs = lastTickTs
         while(this.inputQueue.length) {
@@ -25,6 +28,7 @@ export class GameStateEngine {
             if (input.type === 'move') {
                 // adjust the direction the player is moving
                 player.direction = input.value
+                this.stateHasChanged = true
             }
 
             // actually advance game state
@@ -49,6 +53,7 @@ export class GameStateEngine {
         this.gameState.players.forEach(player => {
             if (['up', 'right', 'down', 'left'].includes(player.direction)) {
                 this.updatePlayer(player, msDuration)
+                this.stateHasChanged = true
             }
         });
     }
@@ -181,9 +186,11 @@ export class GameStateEngine {
     }
 
     publish() {
-        this.subscriptions.forEach(subscription => {
-            subscription(this.gameState)
-        })
+        if (this.stateHasChanged) {
+            this.subscriptions.forEach(subscription => {
+                subscription(this.gameState)
+            })
+        }
     }
 
     addPlayer(playerId) {
