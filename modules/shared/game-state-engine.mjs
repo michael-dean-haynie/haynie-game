@@ -47,7 +47,9 @@ export class GameStateEngine {
     advanceContinuousState(msDuration) {
         // advance all player positions
         this.gameState.players.forEach(player => {
-            this.updatePlayer(player, msDuration)
+            if (['up', 'right', 'down', 'left'].includes(player.direction)) {
+                this.updatePlayer(player, msDuration)
+            }
         });
     }
 
@@ -98,6 +100,7 @@ export class GameStateEngine {
         const minY = player.width / 2
         const maxY = this.gameHeight - (player.width / 2)
 
+        // correct collision
         if (projectedPosition.x < minX) {
             correctedPosition.x = minX
         }
@@ -111,8 +114,67 @@ export class GameStateEngine {
             correctedPosition.y = maxY
         }
 
+        // detect collision with other players
+        const playerPathing = this.calculatePlayerPathingAtPosition(player, projectedPosition)
+        const otherPlayers = this.gameState.players.filter(plyr => plyr.id !== player.id)
+        for (let otherPlayer of otherPlayers) {
+            const otherPlayerPosition = {
+                x: otherPlayer.x,
+                y: otherPlayer.y
+            }
+            const otherPlayerPathing = this.calculatePlayerPathingAtPosition(otherPlayer, otherPlayerPosition)
+            if (this.pathingsOverlap(playerPathing, otherPlayerPathing)) {
+                // correct collision
+                switch(player.direction) {
+                    case 'up':
+                        correctedPosition.y = (otherPlayerPathing.y.min - 1) - (player.width / 2)
+                        break;
+                    case 'right':
+                        correctedPosition.x = (otherPlayerPathing.x.min - 1) - (player.width / 2)
+                        break;
+                    case 'down':
+                        correctedPosition.y = (otherPlayerPathing.y.max + 1) + (player.width / 2)
+                        break;
+                    case 'left':
+                        correctedPosition.x = (otherPlayerPathing.x.max + 1) + (player.width / 2)
+                        break;
+                }
+            }
+        }
+
         return correctedPosition
     }
+
+    calculatePlayerPathingAtPosition(player, position) {
+        return {
+            x: {
+                min: position.x - (player.width / 2),
+                max: position.x + (player.width / 2)
+            },
+            y: {
+                min: position.y - (player.width / 2),
+                max: position.y + (player.width / 2)
+            },
+
+        }
+    }
+
+    pathingsOverlap(pA, pB) {
+        return ( // overlap on x-axis
+            this.isBetween(pA.x.min, pB.x.min, pB.x.max)
+            || this.isBetween(pA.x.max, pB.x.min, pB.x.max)
+        )
+        && ( // overlap on y-axis
+            this.isBetween(pA.y.min, pB.y.min, pB.y.max)
+            || this.isBetween(pA.y.max, pB.y.min, pB.y.max)
+        )
+    }
+
+    // (inclusive)
+    isBetween(val, min, max) {
+        return val >= min && val <= max
+    }
+
 
     registerSubscription(subscription) {
         this.subscriptions.push(subscription)
