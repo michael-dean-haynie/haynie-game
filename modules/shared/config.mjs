@@ -1,4 +1,4 @@
 export const config = {
-    gameHeight: 400,
-    gameWidth: 850
+    gameHeight: 800,
+    gameWidth: 1700
 }
