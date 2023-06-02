@@ -1,0 +1,4 @@
+{
+  "exec": "node --inspect=9229",
+  "verbose": true
+}
