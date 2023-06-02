@@ -20,8 +20,15 @@ ws.addEventListener('message', function (event) {
     }
 
     if (serverUpdate.type === 'diagnostics-update') {
-        renderingEngine.diagnostics.tps = serverUpdate.value.tps
-        renderingEngine.diagnostics.ticks = serverUpdate.value.ticks
+        if (serverUpdate.value.tps !== undefined){
+            renderingEngine.diagnostics.tps = serverUpdate.value.tps
+        }
+        if (serverUpdate.value.ticks !== undefined){
+            renderingEngine.diagnostics.ticks = serverUpdate.value.ticks
+        }
+        if (serverUpdate.value.aps !== undefined){
+            renderingEngine.diagnostics.aps = serverUpdate.value.aps
+        }
     }
 });
 

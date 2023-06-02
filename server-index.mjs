@@ -3,6 +3,7 @@ import { Logger } from "./modules/shared/util/logger.mjs";
 import { ServerGameEngine } from './modules/game-server/server-game-engine.mjs'
 import { GameStateEngine } from "./modules/shared/game-state-engine.mjs";
 import { v4 as uuidv4 } from 'uuid';
+import {SmoothDiagnostic} from "./modules/shared/util/smooth-diagnostic.mjs";
 const WebSocketServer = require('ws');
 
 const gameStateEngine = new GameStateEngine();
@@ -30,7 +31,10 @@ wss.on("connection", ws => {
     serverGameEngine.registerSubscription((diagnostics) => {
         ws.send(JSON.stringify({
             type: 'diagnostics-update',
-            value: diagnostics
+            value: {
+                ...diagnostics,
+                aps: diagnostics.aps[connectionId]
+            }
         }))
     })
 

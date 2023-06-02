@@ -22,6 +22,7 @@ export class ServerGameEngine {
         this.setTimeouts = 0
         this.setImmediates = 0
         this.tps = new SmoothDiagnostic(0.99, 10)
+        this.playerApsMap = new Map()
 
         this.subscriptions = []
 
@@ -44,12 +45,18 @@ export class ServerGameEngine {
         if (this.previousTickTs + this.tickLengthMs <= now) {
             const msSinceLastTick = (now - this.previousTickTs)
             this.updateTps(msSinceLastTick)
+            this.updateAps(msSinceLastTick)
 
-            // publish diagnostics update every 100 ticks
-            if (this.tick % 100 === 0) {
+            // publish diagnostics update every so many ticks
+            const aps = {}
+            for (let [playerId, smoothAps] of this.playerApsMap) {
+                aps[playerId] = Math.floor(smoothAps.smoothValue)
+            }
+            if (this.tick % 50 === 0) {
                 this.publish({
                     tps: Math.floor(this.tps.smoothValue),
-                    ticks: this.tick
+                    ticks: this.tick,
+                    aps
                 })
             }
 
@@ -89,6 +96,33 @@ export class ServerGameEngine {
         const currentTps = 1000 / msSinceLastTick
         this.tps.update(currentTps)
     }
+
+    // TODO: make this ... not terrible
+    updateAps(msSinceLastTick) {
+        const playerActionCountMap = new Map()
+        for (let input of this.gameStateEngine.inputQueue) {
+            if (playerActionCountMap.has(input.playerId)) {
+                playerActionCountMap.set(input.playerId, playerActionCountMap.get(input.playerId) + 1)
+            } else {
+                playerActionCountMap.set(input.playerId, 1)
+            }
+        }
+        for (let [playerId, actionCount] of playerActionCountMap) {
+           if (this.playerApsMap.has(playerId)){
+               this.playerApsMap.get(playerId).update((1000 / msSinceLastTick) * actionCount)
+           } else {
+               this.playerApsMap.set(playerId, new SmoothDiagnostic(0.99, 0))
+           }
+        }
+        const playersThatHadNoActions =
+            Array.from(this.playerApsMap.keys())
+                .filter(playerId => !Array.from(playerActionCountMap.keys()).includes(playerId))
+        playersThatHadNoActions.forEach(playerId => {
+            this.playerApsMap.get(playerId).update(0)
+        })
+    }
+
+
 
     // right now pub/sub only for diagnostics but could make game state engine subscribe
     registerSubscription(subscription) {
