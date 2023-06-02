@@ -14,7 +14,15 @@ ws.addEventListener("open", () =>{
 });
 
 ws.addEventListener('message', function (event) {
-    gameStateEngine.gameState = JSON.parse(event.data)
+    const serverUpdate = JSON.parse(event.data)
+    if (serverUpdate.type === 'game-state-update') {
+        gameStateEngine.gameState = serverUpdate.value
+    }
+
+    if (serverUpdate.type === 'diagnostics-update') {
+        renderingEngine.diagnostics.tps = serverUpdate.value.tps
+        renderingEngine.diagnostics.ticks = serverUpdate.value.ticks
+    }
 });
 
 const playerInputController = new PlayerInputController()

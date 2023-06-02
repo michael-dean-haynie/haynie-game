@@ -9,11 +9,15 @@ export class RenderingEngine {
         this.canvas.height = config.gameHeight
 
         this.diagnostics = {
-            fps: 0
+            fps: 0,
+            frames: 0,
+            tps: 0,
+            ticks: 0
+
         }
     }
 
-    render(gameState, fps) {
+    render(gameState) {
         this.context.clearRect(0,0, this.canvas.width, this.canvas.height)
         gameState.players.forEach(player => {
             this.context.fillStyle = player.color
@@ -22,18 +26,22 @@ export class RenderingEngine {
             this.context.fillRect(x, this.iy(y), 50, 50)
         })
 
-        this.diagnostics.fps = fps
         this.printDiagnostics()
     }
 
     // Invert the y-axis
     iy(y) {
-        return canvas.height - y;
+        return this.canvas.height - y;
     }
 
     printDiagnostics() {
         this.context.fillStyle = 'black'
         this.context.font = '12px Arial'
-        this.context.fillText(`fps: ${this.diagnostics.fps}`, 12, this.iy( 12))
+        const lineHeight = 12
+
+        let line = 1
+        for (const [key, value] of Object.entries(this.diagnostics)) {
+            this.context.fillText(`${key}: ${value}`, 12, this.iy((line++) * lineHeight))
+        }
     }
 }

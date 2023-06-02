@@ -20,7 +20,18 @@ wss.on("connection", ws => {
 
     // publish gameState updates to client
     gameStateEngine.registerSubscription((gameState) => {
-        ws.send(JSON.stringify(gameState))
+        ws.send(JSON.stringify({
+            type: 'game-state-update',
+            value: gameState
+        }))
+    })
+
+    // publish diagnostics updates to client
+    serverGameEngine.registerSubscription((diagnostics) => {
+        ws.send(JSON.stringify({
+            type: 'diagnostics-update',
+            value: diagnostics
+        }))
     })
 
     // enqueue game input from client

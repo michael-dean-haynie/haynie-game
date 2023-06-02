@@ -1,4 +1,5 @@
 import { Logger} from "../shared/util/logger.mjs";
+import {SmoothDiagnostic} from "../shared/util/smooth-diagnostic.mjs";
 
 /**
  * TODO: esplain this is the thing that drives the client, what it's responsible for
@@ -9,8 +10,7 @@ export class ClientGameEngine {
         this.renderingEngine = renderingEngine
         this.previousFrameTs = Date.now()
         this.frame = 0
-        this.fpsSmoothing = 0.99 // closer to 1.0 = more smoothing
-        this.smoothFps = 0
+        this.fps = new SmoothDiagnostic(0.99, 10)
     }
 
     start() {
@@ -21,12 +21,10 @@ export class ClientGameEngine {
     gameLoop() {
         this.frame++
         const now = Date.now()
-        this.updateSmoothFps(now, this.previousFrameTs)
+        this.updateFps(now, this.previousFrameTs)
         this.previousFrameTs = now
 
-
         // Logger.verbose(`Entering ClientGameEngine.gameLoop() [ts=${now}]`)
-
 
         this.update()
 
@@ -41,15 +39,13 @@ export class ClientGameEngine {
     }
 
     draw() {
-        this.renderingEngine.render(this.gameStateEngine.gameState, Math.floor(this.smoothFps))
+        this.renderingEngine.diagnostics.frames = this.frame
+        this.renderingEngine.diagnostics.fps = Math.floor(this.fps.smoothValue)
+        this.renderingEngine.render(this.gameStateEngine.gameState)
     }
 
-    updateSmoothFps(currentFrameTs, previousFrameTs) {
-        const fps = 1000 / (currentFrameTs - previousFrameTs)
-        if (this.frame < 5) {
-            this.smoothFps = fps // skip smoothing for the first few frames
-        } else {
-            this.smoothFps = (this.smoothFps * this.fpsSmoothing) + (fps * (1.0 - this.fpsSmoothing))
-        }
+    updateFps(currentFrameTs, previousFrameTs) {
+        const currentFps = 1000 / (currentFrameTs - previousFrameTs)
+        this.fps.update(currentFps)
     }
 }

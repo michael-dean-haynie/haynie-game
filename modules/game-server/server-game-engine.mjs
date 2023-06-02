@@ -1,4 +1,5 @@
 import { Logger} from "../shared/util/logger.mjs";
+import {SmoothDiagnostic} from "../shared/util/smooth-diagnostic.mjs";
 
 /**
  * TODO: esplain - this is the engine that drives the server, what it's responsible for
@@ -20,7 +21,9 @@ export class ServerGameEngine {
         this.gameLoopInvocations = 0
         this.setTimeouts = 0
         this.setImmediates = 0
+        this.tps = new SmoothDiagnostic(0.99, 10)
 
+        this.subscriptions = []
 
         // Testing Options
         this.maxTicks = null
@@ -40,6 +43,16 @@ export class ServerGameEngine {
 
         if (this.previousTickTs + this.tickLengthMs <= now) {
             const msSinceLastTick = (now - this.previousTickTs)
+            this.updateTps(msSinceLastTick)
+
+            // publish diagnostics update every 100 ticks
+            if (this.tick % 100 === 0) {
+                this.publish({
+                    tps: Math.floor(this.tps.smoothValue),
+                    ticks: this.tick
+                })
+            }
+
             const lastTickTs = this.previousTickTs
             this.previousTickTs = now
 
@@ -70,5 +83,21 @@ export class ServerGameEngine {
     update(lastTickTs, currentTickTs) {
         Logger.verbose(`Entering ServerGameEngine.update() [tick=${this.tick}, lastTickTs=${lastTickTs}, currentTickTs=${currentTickTs}]`)
         this.gameStateEngine.update(lastTickTs, currentTickTs);
+    }
+
+    updateTps(msSinceLastTick) {
+        const currentTps = 1000 / msSinceLastTick
+        this.tps.update(currentTps)
+    }
+
+    // right now pub/sub only for diagnostics but could make game state engine subscribe
+    registerSubscription(subscription) {
+        this.subscriptions.push(subscription)
+    }
+
+    publish(diagnostics) {
+        this.subscriptions.forEach(subscription => {
+            subscription(diagnostics)
+        })
     }
 }
