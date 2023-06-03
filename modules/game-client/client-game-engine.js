@@ -1,10 +1,10 @@
-import { Logger } from '../shared/util/logger.mjs'
-import { SmoothDiagnostic } from '../shared/util/smooth-diagnostic.mjs'
+const Logger = require('../shared/util/logger.js')
+const SmoothDiagnostic = require('../shared/util/smooth-diagnostic.js')
 
 /**
  * TODO: esplain this is the thing that drives the client, what it's responsible for
  */
-export class ClientGameEngine {
+module.exports = class ClientGameEngine {
   constructor (gameStateEngine, renderingEngine) {
     this.gameStateEngine = gameStateEngine
     this.renderingEngine = renderingEngine

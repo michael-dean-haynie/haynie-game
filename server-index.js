@@ -1,16 +1,15 @@
-import { require } from './modules/shared/util/require.mjs'
-import { Logger } from './modules/shared/util/logger.mjs'
-import { ServerGameEngine } from './modules/game-server/server-game-engine.mjs'
-import { GameStateEngine } from './modules/shared/game-state-engine.mjs'
-import { v4 as uuidv4 } from 'uuid'
-const WebSocketServer = require('ws')
+const Logger = require('./modules/shared/util/logger.js')
+const ServerGameEngine = require('./modules/game-server/server-game-engine.js')
+const GameStateEngine = require('./modules/shared/game-state-engine.js')
+const { v4: uuidv4 } = require('uuid')
+const WebSocket = require('ws')
 
 const gameStateEngine = new GameStateEngine()
 const serverGameEngine = new ServerGameEngine(gameStateEngine)
 
 // Creating a new websocket server
 const connections = new Map()
-const wss = new WebSocketServer.Server({ port: 8070 })
+const wss = new WebSocket.WebSocketServer({ port: 8070 })
 
 wss.on('connection', ws => {
   const connection = ws

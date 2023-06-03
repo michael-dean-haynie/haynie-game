@@ -1,4 +1,4 @@
-export class Logger {
+module.exports = class Logger {
   static level = 1
   static levels = {
     verbose: 0,

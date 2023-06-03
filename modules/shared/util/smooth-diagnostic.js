@@ -1,5 +1,5 @@
 // inspiration: https://stackoverflow.com/a/87333
-export class SmoothDiagnostic {
+module.exports = class SmoothDiagnostic {
   constructor (smoothingFactor, smoothingDelay) {
     this.smoothingFactor = smoothingFactor // closer to 1.0 = more smoothing
     this.smoothingDelay = smoothingDelay // first x updates will not be smoothed
