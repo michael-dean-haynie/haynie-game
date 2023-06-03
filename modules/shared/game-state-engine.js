@@ -1,6 +1,6 @@
-import { config } from './config.mjs'
+const config = require('./config.js')
 
-export class GameStateEngine {
+module.exports = class GameStateEngine {
   constructor () {
     this.gameHeight = config.gameHeight
     this.gameWidth = config.gameWidth

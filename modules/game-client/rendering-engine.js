@@ -1,6 +1,6 @@
-import { config } from '../shared/config.mjs'
+const config = require('../shared/config.js')
 
-export class RenderingEngine {
+module.exports = class RenderingEngine {
   constructor (canvas) {
     this.canvas = canvas
     this.context = canvas.getContext('2d')

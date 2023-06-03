@@ -1,11 +1,11 @@
-import { Logger } from '../shared/util/logger.mjs'
-import { SmoothDiagnostic } from '../shared/util/smooth-diagnostic.mjs'
+const Logger = require('../shared/util/logger.js')
+const SmoothDiagnostic = require('../shared/util/smooth-diagnostic.js')
 
 /**
  * TODO: esplain - this is the engine that drives the server, what it's responsible for
  * inspiration: https://timetocode.tumblr.com/post/71512510386/an-accurate-node-js-game-loop-inbetween-settimeout-and
  */
-export class ServerGameEngine {
+module.exports = class ServerGameEngine {
   constructor (gameStateEngine) {
     this.gameStateEngine = gameStateEngine
     // Length of a tick in milliseconds. The denominator is your desired framerate.

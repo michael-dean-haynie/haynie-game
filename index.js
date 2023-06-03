@@ -1,10 +1,10 @@
-import { Logger } from './modules/shared/util/logger.mjs'
-import { ClientGameEngine } from './modules/game-client/client-game-engine.mjs'
-import { PlayerInputController } from './modules/game-client/player-input-controller.mjs'
-import { GameStateEngine } from './modules/shared/game-state-engine.mjs'
-import { RenderingEngine } from './modules/game-client/rendering-engine.mjs'
-import { SmoothDiagnostic } from './modules/shared/util/smooth-diagnostic.mjs'
-import { v4 as uuidv4 } from 'uuid'
+const Logger = require('./modules/shared/util/logger.js')
+const ClientGameEngine = require('./modules/game-client/client-game-engine.js')
+const PlayerInputController = require('./modules/game-client/player-input-controller.js')
+const GameStateEngine = require('./modules/shared/game-state-engine.js')
+const RenderingEngine = require('./modules/game-client/rendering-engine.js')
+const SmoothDiagnostic = require('./modules/shared/util/smooth-diagnostic.js')
+const uuidv4 = require('uuid').v4
 
 const gameStateEngine = new GameStateEngine()
 const renderingEngine = new RenderingEngine(document.getElementById('canvas'))

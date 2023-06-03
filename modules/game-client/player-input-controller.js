@@ -1,4 +1,4 @@
-export class PlayerInputController {
+module.exports = class PlayerInputController {
   constructor () {
     this.subscriptions = []
 
