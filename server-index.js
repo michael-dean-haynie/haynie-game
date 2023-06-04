@@ -1,20 +1,25 @@
-const Logger = require('./modules/shared/util/logger.js')
 const ServerGameEngine = require('./modules/game-server/server-game-engine.js')
 const GameStateEngine = require('./modules/shared/game-state-engine.js')
 const { v4: uuidv4 } = require('uuid')
 const WebSocket = require('ws')
+const logger = require('./modules/shared/util/logger.js')('server')
+const config = require('./modules/shared/config.js')
 
 const gameStateEngine = new GameStateEngine()
 const serverGameEngine = new ServerGameEngine(gameStateEngine)
 
 // Creating a new websocket server
 const connections = new Map()
-const wss = new WebSocket.WebSocketServer({ port: 8070 })
+const wss = new WebSocket.WebSocketServer({ port: config.gameServerSocketPort })
+logger(`Game server started. (port=${config.gameServerSocketPort})`)
 
+// handle new incoming connection
 wss.on('connection', ws => {
   const connection = ws
   const connectionId = uuidv4()
   connections.set(connectionId, connection)
+  logger(`Connection established: ${connectionId}.`)
+
   gameStateEngine.addPlayer(connectionId)
 
   // publish gameState updates to client
@@ -48,17 +53,16 @@ wss.on('connection', ws => {
 
   // handling what to do when clients disconnect from server
   ws.on('close', () => {
-    Logger.info('The client has disconnected')
     gameStateEngine.removePlayer(connectionId)
     connections.delete(connectionId)
+    logger(`Connection closed: ${connectionId}.`)
   })
 
-  // handling client connection error
-  ws.onerror = function () {
-    Logger.error('Some Error occurred')
+  // handling socket error
+  ws.onerror = function (error) {
+    logger('Unexpected socket error: %', error)
+    throw error
   }
 })
-
-Logger.info('Server has started.')
 
 serverGameEngine.start()
