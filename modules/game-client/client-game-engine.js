@@ -27,7 +27,6 @@ module.exports = class ClientGameEngine {
     this.updateUps(now, this.previousFrameTs)
     this.previousFrameTs = now
 
-
     this.update()
 
     this.draw()

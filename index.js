@@ -6,7 +6,6 @@ const SmoothDiagnostic = require('./modules/shared/util/smooth-diagnostic.js')
 const logger = require('./modules/shared/util/logger.js')('client')
 const config = require('./modules/shared/config.js')
 
-
 const gameStateEngine = new GameStateEngine()
 const renderingEngine = new RenderingEngine(document.getElementById('canvas'))
 const clientGameEngine = new ClientGameEngine(gameStateEngine, renderingEngine)
