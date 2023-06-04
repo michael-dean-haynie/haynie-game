@@ -1,7 +1,7 @@
 module.exports = class ServerSocketController {
   webSocket
 
-  constructor(webSocket, connectionId, gameStateManager, serverGameEngine, socketControllersMap) {
+  constructor (webSocket, connectionId, gameStateManager, serverGameEngine, socketControllersMap) {
     this.logger = require('../shared/util/logger.js')(this.constructor.name)
     this.webSocket = webSocket
     this.connectionId = connectionId
@@ -55,5 +55,4 @@ module.exports = class ServerSocketController {
       throw error
     }
   }
-
 }
