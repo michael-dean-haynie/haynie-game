@@ -1,10 +1,11 @@
-const Logger = require('./modules/shared/util/logger.js')
 const ClientGameEngine = require('./modules/game-client/client-game-engine.js')
 const PlayerInputController = require('./modules/game-client/player-input-controller.js')
 const GameStateEngine = require('./modules/shared/game-state-engine.js')
 const RenderingEngine = require('./modules/game-client/rendering-engine.js')
 const SmoothDiagnostic = require('./modules/shared/util/smooth-diagnostic.js')
-const uuidv4 = require('uuid').v4
+const logger = require('./modules/shared/util/logger.js')('client')
+const config = require('./modules/shared/config.js')
+
 
 const gameStateEngine = new GameStateEngine()
 const renderingEngine = new RenderingEngine(document.getElementById('canvas'))
@@ -15,21 +16,22 @@ let ws
 connectToServer()
 
 function connectToServer () {
-  console.log('npm package uuid works in browser:', uuidv4())
-  console.log('Attempting to connect to server')
-  ws = new WebSocket('ws://localhost:8070') // eslint-disable-line no-undef
+  logger(`Attempting to connect to server. (${config.gameServerSocketUrl})`)
+  ws = new WebSocket(config.gameServerSocketUrl) // eslint-disable-line no-undef
 
+  // handle errors
   ws.addEventListener('error', (event) => {
-    console.warn('Could not connect to server, trying again in 1 second...')
-    // try again after 1 sec
-    setTimeout(_ => connectToServer(), 1000)
+    logger('Could not connect to the game-server. Next attempt in 1 second.')
+    setTimeout(_ => connectToServer(), 1000) // try again in 1 second
   })
 
+  // handle successful connection
   ws.addEventListener('open', () => {
-    Logger.info('Successfully connected to game server.')
+    logger('Successfully connected to the game-server.')
     clientGameEngine.start()
   })
 
+  // handle incoming messages from the game-server
   ws.addEventListener('message', function (event) {
     const serverUpdate = JSON.parse(event.data)
     clientGameEngine.newUpdates++

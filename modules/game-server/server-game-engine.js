@@ -1,4 +1,3 @@
-const Logger = require('../shared/util/logger.js')
 const SmoothDiagnostic = require('../shared/util/smooth-diagnostic.js')
 
 /**
@@ -7,6 +6,7 @@ const SmoothDiagnostic = require('../shared/util/smooth-diagnostic.js')
  */
 module.exports = class ServerGameEngine {
   constructor (gameStateEngine) {
+    this.logger = require('../shared/util/logger.js')(this.constructor.name)
     this.gameStateEngine = gameStateEngine
     // Length of a tick in milliseconds. The denominator is your desired framerate.
     // e.g. 1000 / 20 = 20 fps,  1000 / 60 = 60 fps
@@ -31,7 +31,7 @@ module.exports = class ServerGameEngine {
   }
 
   start () {
-    Logger.info('Starting ServerGameEngine')
+    this.logger('Server game engine started.')
     setImmediate(this.gameLoop.bind(this))
   }
 
@@ -39,7 +39,6 @@ module.exports = class ServerGameEngine {
     const now = Date.now()
 
     this.gameLoopInvocations++
-    // Logger.verbose(`Entering ServerGameEngine.gameLoop() [ts=${now}]`)
 
     if (this.previousTickTs + this.tickLengthMs <= now) {
       const msSinceLastTick = (now - this.previousTickTs)
@@ -67,12 +66,6 @@ module.exports = class ServerGameEngine {
 
       // testing feedback
       if (this.maxTicks && this.tick >= this.maxTicks) {
-        Logger.info('Stopping game loop.')
-        Logger.info(`maxTicks reached (${this.tick}/${this.maxTicks}).`)
-        Logger.info(`tickLengthMs: ${this.tickLengthMs}`)
-        Logger.info(`gameLoopInvocations per tick: ${this.gameLoopInvocations / this.tick}`)
-        Logger.info(`setTimeouts per tick: ${this.setTimeouts / this.tick}`)
-        Logger.info(`setImmediates per tick: ${this.setImmediates / this.tick}`)
         return
       }
     }
@@ -87,7 +80,6 @@ module.exports = class ServerGameEngine {
   }
 
   update (lastTickTs, currentTickTs) {
-    Logger.verbose(`Entering ServerGameEngine.update() [tick=${this.tick}, lastTickTs=${lastTickTs}, currentTickTs=${currentTickTs}]`)
     this.gameStateEngine.update(lastTickTs, currentTickTs)
   }
 

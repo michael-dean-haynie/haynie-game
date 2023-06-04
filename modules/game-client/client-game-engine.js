@@ -1,4 +1,3 @@
-const Logger = require('../shared/util/logger.js')
 const SmoothDiagnostic = require('../shared/util/smooth-diagnostic.js')
 
 /**
@@ -6,6 +5,7 @@ const SmoothDiagnostic = require('../shared/util/smooth-diagnostic.js')
  */
 module.exports = class ClientGameEngine {
   constructor (gameStateEngine, renderingEngine) {
+    this.logger = require('../shared/util/logger.js')(this.constructor.name)
     this.gameStateEngine = gameStateEngine
     this.renderingEngine = renderingEngine
     this.previousFrameTs = Date.now()
@@ -16,7 +16,7 @@ module.exports = class ClientGameEngine {
   }
 
   start () {
-    Logger.info('Starting ClientGameEngine')
+    this.logger('Client game engine started.')
     window.requestAnimationFrame(this.gameLoop.bind(this))
   }
 
@@ -27,7 +27,6 @@ module.exports = class ClientGameEngine {
     this.updateUps(now, this.previousFrameTs)
     this.previousFrameTs = now
 
-    // Logger.verbose(`Entering ClientGameEngine.gameLoop() [ts=${now}]`)
 
     this.update()
 
@@ -37,7 +36,6 @@ module.exports = class ClientGameEngine {
   }
 
   update () {
-    Logger.verbose(`Entering ClientGameEngine.update() [frame=${this.frame}]`)
     // TODO - implement predictive state updates
   }
 
