@@ -1,6 +1,6 @@
 const config = require('./config.js')
 
-module.exports = class GameStateEngine {
+module.exports = class GameStateManager {
   constructor () {
     this.gameHeight = config.gameHeight
     this.gameWidth = config.gameWidth

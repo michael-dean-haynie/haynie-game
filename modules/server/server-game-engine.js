@@ -5,9 +5,9 @@ const SmoothDiagnostic = require('../shared/util/smooth-diagnostic.js')
  * inspiration: https://timetocode.tumblr.com/post/71512510386/an-accurate-node-js-game-loop-inbetween-settimeout-and
  */
 module.exports = class ServerGameEngine {
-  constructor (gameStateEngine) {
+  constructor (gameStateManager) {
     this.logger = require('../shared/util/logger.js')(this.constructor.name)
-    this.gameStateEngine = gameStateEngine
+    this.gameStateManager = gameStateManager
     // Length of a tick in milliseconds. The denominator is your desired framerate.
     // e.g. 1000 / 20 = 20 fps,  1000 / 60 = 60 fps
     this.tickLengthMs = 1000 / 60
@@ -21,7 +21,7 @@ module.exports = class ServerGameEngine {
     this.gameLoopInvocations = 0
     this.setTimeouts = 0
     this.setImmediates = 0
-    this.tps = new SmoothDiagnostic(0.99, 10)
+    this.tpsSD = new SmoothDiagnostic(0.99, 10)
     this.playerApsMap = new Map()
 
     this.subscriptions = []
@@ -52,7 +52,7 @@ module.exports = class ServerGameEngine {
       }
       if (this.tick % 50 === 0) {
         this.publish({
-          tps: Math.floor(this.tps.smoothValue),
+          tps: Math.floor(this.tpsSD.smoothValue),
           ticks: this.tick,
           aps
         })
@@ -80,18 +80,18 @@ module.exports = class ServerGameEngine {
   }
 
   update (lastTickTs, currentTickTs) {
-    this.gameStateEngine.update(lastTickTs, currentTickTs)
+    this.gameStateManager.update(lastTickTs, currentTickTs)
   }
 
   updateTps (msSinceLastTick) {
     const currentTps = 1000 / msSinceLastTick
-    this.tps.update(currentTps)
+    this.tpsSD.update(currentTps)
   }
 
   // TODO: make this ... not terrible
   updateAps (msSinceLastTick) {
     const playerActionCountMap = new Map()
-    for (const input of this.gameStateEngine.inputQueue) {
+    for (const input of this.gameStateManager.inputQueue) {
       if (playerActionCountMap.has(input.playerId)) {
         playerActionCountMap.set(input.playerId, playerActionCountMap.get(input.playerId) + 1)
       } else {

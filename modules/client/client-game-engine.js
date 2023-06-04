@@ -4,15 +4,17 @@ const SmoothDiagnostic = require('../shared/util/smooth-diagnostic.js')
  * TODO: esplain this is the thing that drives the client, what it's responsible for
  */
 module.exports = class ClientGameEngine {
-  constructor (gameStateEngine, renderingEngine) {
+  constructor (gameStateManager, renderer, liveDiagnostics) {
     this.logger = require('../shared/util/logger.js')(this.constructor.name)
-    this.gameStateEngine = gameStateEngine
-    this.renderingEngine = renderingEngine
+    this.gameStateManager = gameStateManager
+    this.renderer = renderer
+    this.liveDiagnostics = liveDiagnostics
+
     this.previousFrameTs = Date.now()
     this.frame = 0
-    this.fps = new SmoothDiagnostic(0.99, 10)
-    this.ups = new SmoothDiagnostic(0.99, 10)
+    this.fpsSD = new SmoothDiagnostic(0.99, 10)
     this.newUpdates = 0
+    this.upsSD = new SmoothDiagnostic(0.99, 10)
   }
 
   start () {
@@ -39,19 +41,19 @@ module.exports = class ClientGameEngine {
   }
 
   draw () {
-    this.renderingEngine.diagnostics.frames = this.frame
-    this.renderingEngine.diagnostics.fps = Math.floor(this.fps.smoothValue)
-    this.renderingEngine.diagnostics.ups = Math.floor(this.ups.smoothValue)
-    this.renderingEngine.render(this.gameStateEngine.gameState)
+    this.liveDiagnostics.frames = this.frame
+    this.liveDiagnostics.fps = Math.floor(this.fpsSD.smoothValue)
+    this.liveDiagnostics.ups = Math.floor(this.upsSD.smoothValue)
+    this.renderer.render(this.gameStateManager.gameState)
   }
 
   updateFps (currentFrameTs, previousFrameTs) {
     const currentFps = 1000 / (currentFrameTs - previousFrameTs)
-    this.fps.update(currentFps)
+    this.fpsSD.update(currentFps)
   }
 
   updateUps (currentFrameTs, previousFrameTs) {
-    this.ups.update((1000 / (currentFrameTs - previousFrameTs)) * this.newUpdates)
+    this.upsSD.update((1000 / (currentFrameTs - previousFrameTs)) * this.newUpdates)
     this.newUpdates = 0
   }
 }
