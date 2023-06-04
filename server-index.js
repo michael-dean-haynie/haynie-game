@@ -1,12 +1,13 @@
-const ServerGameEngine = require('./modules/game-server/server-game-engine.js')
-const GameStateEngine = require('./modules/shared/game-state-engine.js')
+const ServerGameEngine = require('./modules/server/server-game-engine.js')
+const GameStateManager = require('./modules/shared/game-state-manager.js')
 const { v4: uuidv4 } = require('uuid')
 const WebSocket = require('ws')
 const logger = require('./modules/shared/util/logger.js')('server')
 const config = require('./modules/shared/config.js')
 
-const gameStateEngine = new GameStateEngine()
-const serverGameEngine = new ServerGameEngine(gameStateEngine)
+// initialize components
+const gameStateManager = new GameStateManager()
+const serverGameEngine = new ServerGameEngine(gameStateManager)
 
 // Creating a new websocket server
 const connections = new Map()
@@ -20,10 +21,10 @@ wss.on('connection', ws => {
   connections.set(connectionId, connection)
   logger(`Connection established: ${connectionId}.`)
 
-  gameStateEngine.addPlayer(connectionId)
+  gameStateManager.addPlayer(connectionId)
 
   // publish gameState updates to client
-  gameStateEngine.registerSubscription((gameState, clientPingTsMap) => {
+  gameStateManager.registerSubscription((gameState, clientPingTsMap) => {
     ws.send(JSON.stringify({
       type: 'game-state-update',
       value: gameState,
@@ -48,12 +49,12 @@ wss.on('connection', ws => {
     const input = JSON.parse(data)
     input.playerId = connectionId
     input.timestamp = Date.now()
-    gameStateEngine.inputQueue.push(input)
+    gameStateManager.inputQueue.push(input)
   })
 
   // handling what to do when clients disconnect from server
   ws.on('close', () => {
-    gameStateEngine.removePlayer(connectionId)
+    gameStateManager.removePlayer(connectionId)
     connections.delete(connectionId)
     logger(`Connection closed: ${connectionId}.`)
   })

@@ -1,22 +1,14 @@
 const config = require('../shared/config.js')
 
-module.exports = class RenderingEngine {
-  constructor (canvas) {
+module.exports = class Renderer {
+  constructor (canvas, liveDiagnostics) {
     this.canvas = canvas
     this.context = canvas.getContext('2d')
 
     this.canvas.width = config.gameWidth
     this.canvas.height = config.gameHeight
 
-    this.diagnostics = {
-      fps: 0,
-      frames: 0,
-      tps: 0,
-      ticks: 0,
-      aps: 0,
-      ups: 0,
-      ping: 0
-    }
+    this.liveDiagnostics = liveDiagnostics
   }
 
   render (gameState) {
@@ -42,7 +34,7 @@ module.exports = class RenderingEngine {
     const lineHeight = 12
 
     let line = 1
-    for (const [key, value] of Object.entries(this.diagnostics)) {
+    for (const [key, value] of Object.entries(this.liveDiagnostics)) {
       this.context.fillText(`${key}: ${value}`, 12, this.iy((line++) * lineHeight))
     }
   }
