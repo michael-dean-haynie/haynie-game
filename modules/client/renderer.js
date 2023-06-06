@@ -15,9 +15,9 @@ module.exports = class Renderer {
     this.context.clearRect(0, 0, this.canvas.width, this.canvas.height)
     gameState.players.forEach(player => {
       this.context.fillStyle = player.color
-      const x = player.x - (player.width / 2)
-      const y = player.y + (player.width / 2)
-      this.context.fillRect(x, this.iy(y), 50, 50)
+      const x = player.position.x - (player.width / 2)
+      const y = player.position.y + (player.width / 2)
+      this.context.fillRect(x, this.iy(y), player.width, player.width)
     })
 
     this.printDiagnostics()

@@ -5,9 +5,15 @@ const { v4: uuidv4 } = require('uuid')
 const WebSocket = require('ws')
 const logger = require('./modules/shared/util/logger.js')('server')
 const config = require('./modules/shared/config.js')
+const GameState = require('./modules/shared/models/game-state/game-state.model')
 
 // initialize components
-const gameStateManager = new GameStateManager()
+const gameState = new GameState({
+  gameHeight: config.gameHeight,
+  gameWidth: config.gameWidth,
+  players: []
+})
+const gameStateManager = new GameStateManager({ gameState })
 const serverGameEngine = new ServerGameEngine(gameStateManager)
 
 // Creating a new websocket server

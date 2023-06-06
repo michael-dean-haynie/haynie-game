@@ -11,14 +11,14 @@ module.exports = class ServerSocketController {
 
     this.logger(`Connection established: ${this.connectionId}.`)
 
-    this.gameStateManager.addPlayer(this.connectionId)
+    this.gameStateManager.gameEventFactory.createPlayerJoinedEvent(this.connectionId)
 
     // publish gameState updates to client
     this.gameStateManager.registerSubscription((gameState, clientPingTsMap) => {
       this.webSocket.send(JSON.stringify({
         type: 'game-state-update',
         value: gameState,
-        clientPingTs: clientPingTsMap.get(this.connectionId)
+        // clientPingTs: clientPingTsMap.get(this.connectionId)
       }))
     })
 
@@ -39,12 +39,15 @@ module.exports = class ServerSocketController {
       const input = JSON.parse(data)
       input.playerId = this.connectionId
       input.timestamp = Date.now()
-      this.gameStateManager.inputQueue.push(input)
+
+      if (input.type === 'move') {
+        this.gameStateManager.gameEventFactory.createPlayerVectorChangedEvent(this.connectionId, input.value)
+      }
     })
 
     // handling what to do when clients disconnect from server
     this.webSocket.on('close', () => {
-      this.gameStateManager.removePlayer(this.connectionId)
+      this.gameStateManager.gameEventFactory.createPlayerLeftEvent(this.connectionId)
       this.socketControllersMap.delete(this.connectionId)
       this.logger(`Connection closed: ${this.connectionId}.`)
     })
