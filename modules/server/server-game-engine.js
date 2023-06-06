@@ -9,9 +9,10 @@ const SmoothDiagnostic = require('../shared/util/smooth-diagnostic.js')
  * * 'tick' - A cycle of the game loop that is permitted to complete (make logic updates, process inputs, have side effects)
  */
 module.exports = class ServerGameEngine {
-  constructor (gameStateManager) {
+  constructor (gameStateManager, liveDiagnostics) {
     this.logger = require('../shared/util/logger.js')(this.constructor.name)
     this.gameStateManager = gameStateManager
+    this.liveDiagnostics = liveDiagnostics
 
     // Length of a tick in milliseconds. The denominator is your desired framerate.
     // e.g. 1000 / 20 = 20 fps,  1000 / 60 = 60 fps
@@ -31,7 +32,6 @@ module.exports = class ServerGameEngine {
     this.setImmediates = 0
 
     this.tpsSD = new SmoothDiagnostic(0.99, 10)
-    this.playerApsMap = new Map()
 
     this.subscriptions = []
 
@@ -87,20 +87,8 @@ module.exports = class ServerGameEngine {
   tick(msSinceLastTick) {
     this.ticks++
 
-    // publish diagnostics update every so many ticks
+    // diagnostics
     this.updateTps(msSinceLastTick)
-    this.updateAps(msSinceLastTick)
-    const aps = {}
-    for (const [playerId, smoothAps] of this.playerApsMap) {
-      aps[playerId] = Math.floor(smoothAps.smoothValue)
-    }
-    if (this.ticks % 50 === 0) {
-      this.publish({
-        tps: Math.floor(this.tpsSD.smoothValue),
-        ticks: this.ticks,
-        aps
-      })
-    }
 
     // actually do game stuff
     const currentTickTs = this.lastTickTs + msSinceLastTick
@@ -119,41 +107,6 @@ module.exports = class ServerGameEngine {
   updateTps (msSinceLastTick) {
     const currentTps = 1000 / msSinceLastTick
     this.tpsSD.update(currentTps)
-  }
-
-  // TODO: make this ... not terrible
-  updateAps (msSinceLastTick) {
-    // const playerActionCountMap = new Map()
-    // for (const input of this.gameStateManager.inputQueue) {
-    //   if (playerActionCountMap.has(input.playerId)) {
-    //     playerActionCountMap.set(input.playerId, playerActionCountMap.get(input.playerId) + 1)
-    //   } else {
-    //     playerActionCountMap.set(input.playerId, 1)
-    //   }
-    // }
-    // for (const [playerId, actionCount] of playerActionCountMap) {
-    //   if (this.playerApsMap.has(playerId)) {
-    //     this.playerApsMap.get(playerId).update((1000 / msSinceLastTick) * actionCount)
-    //   } else {
-    //     this.playerApsMap.set(playerId, new SmoothDiagnostic(0.99, 0))
-    //   }
-    // }
-    // const playersThatHadNoActions =
-    //         Array.from(this.playerApsMap.keys())
-    //           .filter(playerId => !Array.from(playerActionCountMap.keys()).includes(playerId))
-    // playersThatHadNoActions.forEach(playerId => {
-    //   this.playerApsMap.get(playerId).update(0)
-    // })
-  }
-
-  // right now pub/sub only for diagnostics but could make game state engine subscribe
-  registerSubscription (subscription) {
-    this.subscriptions.push(subscription)
-  }
-
-  publish (diagnostics) {
-    this.subscriptions.forEach(subscription => {
-      subscription(diagnostics)
-    })
+    this.liveDiagnostics.tps = Math.floor(this.tpsSD.smoothValue)
   }
 }

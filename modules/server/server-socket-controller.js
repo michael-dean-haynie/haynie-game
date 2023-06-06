@@ -9,13 +9,13 @@ module.exports = class ServerSocketController {
   inputsSinceLastPing = 0
   apmSD = new SmoothDiagnostic(0.75, 3)
 
-  constructor (webSocket, connectionId, gameStateManager, serverGameEngine, socketControllersMap) {
+  constructor (webSocket, connectionId, gameStateManager, socketControllersMap, liveDiagnostics) {
     this.logger = require('../shared/util/logger.js')(this.constructor.name)
     this.webSocket = webSocket
     this.connectionId = connectionId
     this.gameStateManager = gameStateManager
-    this.serverGameEngine = serverGameEngine
     this.socketControllersMap = socketControllersMap
+    this.liveDiagnostics = liveDiagnostics
 
     this.logger(`Connection established: ${this.connectionId}.`)
 
@@ -25,17 +25,6 @@ module.exports = class ServerSocketController {
     this.gameStateManager.registerSubscription((gameState) => {
       this.webSocket.send(JSON.stringify(new GameStateUpdateMessage({ gameState })))
     })
-
-    // // publish diagnostics updates to client
-    // this.serverGameEngine.registerSubscription((diagnostics) => {
-    //   this.webSocket.send(JSON.stringify({
-    //     type: 'diagnostics-update',
-    //     value: {
-    //       ...diagnostics,
-    //       aps: diagnostics.aps[this.connectionId]
-    //     }
-    //   }))
-    // })
 
     // process input from client
     this.webSocket.on('message', dataBuffer => {
@@ -69,7 +58,8 @@ module.exports = class ServerSocketController {
 
         this.webSocket.send(JSON.stringify(new PingMessage( {
           ...message,
-          apm:  Math.floor(this.apmSD.smoothValue)
+          apm: Math.floor(this.apmSD.smoothValue),
+          tps: this.liveDiagnostics.tps
         })))
       }
     })

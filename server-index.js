@@ -6,6 +6,7 @@ const WebSocket = require('ws')
 const logger = require('./modules/shared/util/logger.js')('server')
 const config = require('./modules/shared/config.js')
 const GameState = require('./modules/shared/models/game-state/game-state.model')
+const LiveDiagnostics = require('./modules/client/live-diagnostics')
 
 // initialize components
 const gameState = new GameState({
@@ -14,7 +15,8 @@ const gameState = new GameState({
   players: []
 })
 const gameStateManager = new GameStateManager({ gameState })
-const serverGameEngine = new ServerGameEngine(gameStateManager)
+const liveDiagnostics = new LiveDiagnostics()
+const serverGameEngine = new ServerGameEngine(gameStateManager, liveDiagnostics)
 
 // Creating a new websocket server
 const socketControllersMap = new Map()
@@ -28,8 +30,8 @@ wss.on('connection', ws => {
     ws,
     connectionId,
     gameStateManager,
-    serverGameEngine,
-    socketControllersMap
+    socketControllersMap,
+    liveDiagnostics
   )
   socketControllersMap.set(connectionId, controller)
 })

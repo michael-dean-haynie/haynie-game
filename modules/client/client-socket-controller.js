@@ -59,19 +59,8 @@ module.exports = class ClientSocketController {
       this.pingSD.update(Date.now() - message.startTimestamp)
       this.liveDiagnostics.ping = Math.floor(this.pingSD.smoothValue)
       this.liveDiagnostics.apm = message.apm
+      this.liveDiagnostics.tps = message.tps
     }
-
-    // if (serverUpdate.type === 'diagnostics-update') {
-    //   if (serverUpdate.value.tps !== undefined) {
-    //     this.liveDiagnostics.tps = serverUpdate.value.tps
-    //   }
-    //   if (serverUpdate.value.ticks !== undefined) {
-    //     this.liveDiagnostics.ticks = serverUpdate.value.ticks
-    //   }
-    //   if (serverUpdate.value.aps !== undefined) {
-    //     this.liveDiagnostics.aps = serverUpdate.value.aps
-    //   }
-    // }
   }
 
   // handle error establishing connection

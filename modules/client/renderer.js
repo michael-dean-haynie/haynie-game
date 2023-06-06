@@ -20,6 +20,7 @@ module.exports = class Renderer {
       this.context.fillRect(x, this.iy(y), player.width, player.width)
     })
 
+    this.liveDiagnostics.ticks = gameState.tick
     this.printDiagnostics()
   }
 
