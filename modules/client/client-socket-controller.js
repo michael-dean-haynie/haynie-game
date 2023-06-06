@@ -58,6 +58,7 @@ module.exports = class ClientSocketController {
     if (message.messageType === PingMessage.name) {
       this.pingSD.update(Date.now() - message.startTimestamp)
       this.liveDiagnostics.ping = Math.floor(this.pingSD.smoothValue)
+      this.liveDiagnostics.apm = message.apm
     }
 
     // if (serverUpdate.type === 'diagnostics-update') {

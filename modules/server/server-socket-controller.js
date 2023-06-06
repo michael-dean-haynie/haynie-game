@@ -2,8 +2,12 @@ const PlayerInputMessage = require('../shared/models/socket-message/player-input
 const MoveInput = require('../shared/models/player-input/move-input.model')
 const PingMessage = require('../shared/models/socket-message/ping-message.model')
 const GameStateUpdateMessage = require('../shared/models/socket-message/game-state-update-message.model')
+const SmoothDiagnostic = require('../shared/util/smooth-diagnostic')
 module.exports = class ServerSocketController {
   webSocket
+  lastPing = Date.now()
+  inputsSinceLastPing = 0
+  apmSD = new SmoothDiagnostic(0.75, 3)
 
   constructor (webSocket, connectionId, gameStateManager, serverGameEngine, socketControllersMap) {
     this.logger = require('../shared/util/logger.js')(this.constructor.name)
@@ -44,13 +48,29 @@ module.exports = class ServerSocketController {
         input.playerId = this.connectionId
         input.timestamp = Date.now()
 
+        // diagnostics
+        this.inputsSinceLastPing++
+
+        // event factory
         if (input.inputType === MoveInput.name) {
           this.gameStateManager.gameEventFactory.createPlayerVectorChangedEvent(this.connectionId, input.direction)
         }
       }
 
+      // respond to ping with other server-side diagnostics included too
       if (message.messageType === PingMessage.name) {
-        this.webSocket.send(JSON.stringify(message))
+        const msSinceLastPing = Date.now() - this.lastPing
+        this.lastPing = Date.now()
+        const sSinceLastPing = msSinceLastPing / 1000
+        const mSinceLastPing = sSinceLastPing / 60
+        const avgApmSinceLastPing = this.inputsSinceLastPing / mSinceLastPing
+        this.apmSD.update(avgApmSinceLastPing)
+        this.inputsSinceLastPing = 0
+
+        this.webSocket.send(JSON.stringify(new PingMessage( {
+          ...message,
+          apm:  Math.floor(this.apmSD.smoothValue)
+        })))
       }
     })
 
