@@ -13,8 +13,6 @@ module.exports = class ClientGameEngine {
     this.previousFrameTs = Date.now()
     this.frame = 0
     this.fpsSD = new SmoothDiagnostic(0.99, 10)
-    this.newUpdates = 0
-    this.upsSD = new SmoothDiagnostic(0.99, 10)
   }
 
   start () {
@@ -26,7 +24,6 @@ module.exports = class ClientGameEngine {
     this.frame++
     const now = Date.now()
     this.updateFps(now, this.previousFrameTs)
-    this.updateUps(now, this.previousFrameTs)
     this.previousFrameTs = now
 
     this.update()
@@ -43,17 +40,11 @@ module.exports = class ClientGameEngine {
   draw () {
     this.liveDiagnostics.frames = this.frame
     this.liveDiagnostics.fps = Math.floor(this.fpsSD.smoothValue)
-    this.liveDiagnostics.ups = Math.floor(this.upsSD.smoothValue)
     this.renderer.render(this.gameStateManager.gameState)
   }
 
   updateFps (currentFrameTs, previousFrameTs) {
     const currentFps = 1000 / (currentFrameTs - previousFrameTs)
     this.fpsSD.update(currentFps)
-  }
-
-  updateUps (currentFrameTs, previousFrameTs) {
-    this.upsSD.update((1000 / (currentFrameTs - previousFrameTs)) * this.newUpdates)
-    this.newUpdates = 0
   }
 }

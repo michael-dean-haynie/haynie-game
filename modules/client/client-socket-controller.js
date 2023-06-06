@@ -17,6 +17,9 @@ module.exports = class ClientSocketController {
 
     this.webSocket = undefined
     this.pingSD = new SmoothDiagnostic(0.1, 0)
+
+    this.lastGameStateUpdate = Date.now()
+    this.upsSD = new SmoothDiagnostic(0.95, 10)
   }
 
   connect () {
@@ -47,14 +50,13 @@ module.exports = class ClientSocketController {
 
     if (message.messageType === GameStateUpdateMessage.name) {
       this.gameStateManager.gameState = message.gameState
+      this.upsSD.update(1000 / (Date.now() - this.lastGameStateUpdate))
+      this.liveDiagnostics.ups = Math.floor(this.upsSD.smoothValue)
+      this.lastGameStateUpdate = Date.now()
     }
 
     if (message.messageType === PingMessage.name) {
-      console.log(Date.now())
-      console.log(message.startTimestamp)
-      const RTT = Date.now() - message.startTimestamp
-      console.log(RTT)
-      this.pingSD.update(RTT)
+      this.pingSD.update(Date.now() - message.startTimestamp)
       this.liveDiagnostics.ping = Math.floor(this.pingSD.smoothValue)
     }
 
