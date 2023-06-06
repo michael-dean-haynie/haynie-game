@@ -1,5 +1,8 @@
 const config = require('../shared/config.js')
 const SmoothDiagnostic = require('../shared/util/smooth-diagnostic.js')
+const PlayerInputMessage = require('../shared/models/socket-message/player-input-message.model')
+const PingMessage = require('../shared/models/socket-message/ping-message.model')
+const GameStateUpdateMessage = require('../shared/models/socket-message/game-state-update-message.model')
 
 /**
  * Handles communication with the game server via websocket connection
@@ -13,7 +16,7 @@ module.exports = class ClientSocketController {
     this.liveDiagnostics = liveDiagnostics
 
     this.webSocket = undefined
-    this.pingSD = new SmoothDiagnostic(0.99, 10)
+    this.pingSD = new SmoothDiagnostic(0.1, 0)
   }
 
   connect () {
@@ -26,10 +29,7 @@ module.exports = class ClientSocketController {
 
     // subscribe to the player input controller to send player input to the game-server
     this.playerInputController.registerSubscription((playerInput) => {
-      this.webSocket.send(JSON.stringify({
-        ...playerInput,
-        clientPingTs: Date.now()
-      }))
+      this.webSocket.send(JSON.stringify(new PlayerInputMessage({ playerInput })))
     })
   }
 
@@ -37,36 +37,48 @@ module.exports = class ClientSocketController {
   onOpen (event) {
     this.logger('Successfully connected to the game-server.')
     this.clientGameEngine.start()
+    this.doPing()
   }
 
   // handle incoming messages from the game-server
   onMessage (event) {
-    const serverUpdate = JSON.parse(event.data)
     this.clientGameEngine.newUpdates++
-    if (serverUpdate.type === 'game-state-update') {
-      this.gameStateManager.gameState = serverUpdate.value
-      if (serverUpdate.clientPingTs !== undefined) {
-        this.pingSD.update(Date.now() - serverUpdate.clientPingTs)
-        this.liveDiagnostics.ping = Math.floor(this.pingSD.smoothValue)
-      }
+    const message = JSON.parse(event.data)
+
+    if (message.messageType === GameStateUpdateMessage.name) {
+      this.gameStateManager.gameState = message.gameState
     }
 
-    if (serverUpdate.type === 'diagnostics-update') {
-      if (serverUpdate.value.tps !== undefined) {
-        this.liveDiagnostics.tps = serverUpdate.value.tps
-      }
-      if (serverUpdate.value.ticks !== undefined) {
-        this.liveDiagnostics.ticks = serverUpdate.value.ticks
-      }
-      if (serverUpdate.value.aps !== undefined) {
-        this.liveDiagnostics.aps = serverUpdate.value.aps
-      }
+    if (message.messageType === PingMessage.name) {
+      console.log(Date.now())
+      console.log(message.startTimestamp)
+      const RTT = Date.now() - message.startTimestamp
+      console.log(RTT)
+      this.pingSD.update(RTT)
+      this.liveDiagnostics.ping = Math.floor(this.pingSD.smoothValue)
     }
+
+    // if (serverUpdate.type === 'diagnostics-update') {
+    //   if (serverUpdate.value.tps !== undefined) {
+    //     this.liveDiagnostics.tps = serverUpdate.value.tps
+    //   }
+    //   if (serverUpdate.value.ticks !== undefined) {
+    //     this.liveDiagnostics.ticks = serverUpdate.value.ticks
+    //   }
+    //   if (serverUpdate.value.aps !== undefined) {
+    //     this.liveDiagnostics.aps = serverUpdate.value.aps
+    //   }
+    // }
   }
 
   // handle error establishing connection
   onError (event) {
     this.logger('Could not connect to the game-server. Next attempt in 1 second.')
     setTimeout(_ => this.connect(), 1000) // try again in 1 second
+  }
+
+  doPing() {
+    this.webSocket.send(JSON.stringify(new PingMessage({ startTimestamp: Date.now() })))
+    setTimeout(this.doPing.bind(this), 1000)
   }
 }

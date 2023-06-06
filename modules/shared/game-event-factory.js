@@ -31,9 +31,9 @@ module.exports = class GameEventFactory {
       width,
       position: new Point({
         x: getRandomIntInclusive(width, this.gameState.gameWidth - width),
-        y: getRandomIntInclusive(width, this.gameState.gameWidth - width)
+        y: getRandomIntInclusive(width, this.gameState.gameHeight - width)
       }),
-      moveSpeed: 5,
+      moveSpeed: 10,
       vector: new Vector({
         x: 0,
         y: 0

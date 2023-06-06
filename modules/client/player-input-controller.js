@@ -1,3 +1,4 @@
+const MoveInput = require('../shared/models/player-input/move-input.model')
 module.exports = class PlayerInputController {
   constructor () {
     this.subscriptions = []
@@ -14,10 +15,7 @@ module.exports = class PlayerInputController {
       const direction = this.keyToDirectionMap[event.key]
       if (direction && !this.pks.includes(direction)) {
         this.pks.push(direction)
-        const input = {
-          type: 'move',
-          value: direction
-        }
+        const input = new MoveInput({ direction })
         this.publish(input)
       }
     }
@@ -25,10 +23,8 @@ module.exports = class PlayerInputController {
       const direction = this.keyToDirectionMap[event.key]
       if (direction) {
         this.pks = this.pks.filter(dir => dir !== direction)
-        const input = {
-          type: 'move',
-          value: this.pks.at(-1)
-        }
+        const dir = this.pks.at(-1)
+        const input = new MoveInput({ direction: dir })
         this.publish(input)
       }
     }
