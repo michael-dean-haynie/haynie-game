@@ -8,8 +8,14 @@ function getRandomColor() {
   return '#' + ['r', 'g', 'b'].map(_ => getRandomIntInclusive(50, 200).toString(16)).join('')
 }
 
+// (inclusive)
+function isBetween (min, val, max) {
+  return val >= min && val <= max
+}
+
 
 module.exports = {
   getRandomColor,
-  getRandomIntInclusive
+  getRandomIntInclusive,
+  isBetween
 }
