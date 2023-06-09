@@ -1,12 +1,14 @@
 const ServerSocketController = require('./modules/server/server-socket-controller.js')
 const ServerGameEngine = require('./modules/server/server-game-engine.js')
-const GameStateManager = require('./modules/shared/game-state-manager.js')
 const { v4: uuidv4 } = require('uuid')
 const WebSocket = require('ws')
 const logger = require('./modules/shared/util/logger.js')('server')
 const config = require('./modules/shared/config.js')
 const GameState = require('./modules/shared/models/game-state/game-state.model')
 const LiveDiagnostics = require('./modules/client/live-diagnostics')
+const GameStateMutationFactory = require('./modules/shared/game-state-mutation-factory')
+const MutationStore = require('./modules/shared/mutation-store')
+const GameStateMutator = require('./modules/shared/game-state-mutator')
 
 // initialize components
 const gameState = new GameState({
@@ -14,9 +16,11 @@ const gameState = new GameState({
   gameWidth: config.gameWidth,
   players: []
 })
-const gameStateManager = new GameStateManager({ gameState })
+const gameStateMutationFactory = new GameStateMutationFactory(gameState)
+const mutationStore = new MutationStore()
+const gameStateMutator = new GameStateMutator({ gameState, mutationStore })
 const liveDiagnostics = new LiveDiagnostics()
-const serverGameEngine = new ServerGameEngine(gameStateManager, liveDiagnostics)
+const serverGameEngine = new ServerGameEngine(gameStateMutationFactory, gameStateMutator, liveDiagnostics)
 
 // Creating a new websocket server
 const socketControllersMap = new Map()
@@ -26,13 +30,14 @@ logger(`Game server started. (port=${config.gameServerSocketPort})`)
 // handle new incoming connection
 wss.on('connection', ws => {
   const connectionId = uuidv4()
-  const controller = new ServerSocketController(
-    ws,
+  const controller = new ServerSocketController({
+    webSocket: ws,
     connectionId,
-    gameStateManager,
+    gameStateMutationFactory,
+    gameStateMutator,
     socketControllersMap,
     liveDiagnostics
-  )
+  })
   socketControllersMap.set(connectionId, controller)
 })
 

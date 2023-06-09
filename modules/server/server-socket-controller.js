@@ -1,29 +1,39 @@
 const PlayerInputMessage = require('../shared/models/socket-message/player-input-message.model')
 const MoveInput = require('../shared/models/player-input/move-input.model')
 const PingMessage = require('../shared/models/socket-message/ping-message.model')
-const GameStateUpdateMessage = require('../shared/models/socket-message/game-state-update-message.model')
 const SmoothDiagnostic = require('../shared/util/smooth-diagnostic')
+const PlayerInput = require('../shared/models/player-input/player-input')
+const MutationStoreUpdateMessage = require('../shared/models/socket-message/mutation-store-update-message.model')
+const JoinInput = require('../shared/models/player-input/join-input.model')
+const ExitInput = require('../shared/models/player-input/exit-input.model')
 module.exports = class ServerSocketController {
-  webSocket
   lastPing = Date.now()
   inputsSinceLastPing = 0
   apmSD = new SmoothDiagnostic(0.75, 3)
 
-  constructor (webSocket, connectionId, gameStateManager, socketControllersMap, liveDiagnostics) {
+  constructor ({
+    webSocket,
+    connectionId,
+    gameStateMutationFactory,
+    gameStateMutator,
+    socketControllersMap,
+    liveDiagnostics
+  } = {}) {
     this.logger = require('../shared/util/logger.js')(this.constructor.name)
     this.webSocket = webSocket
     this.connectionId = connectionId
-    this.gameStateManager = gameStateManager
+    this.gameStateMutationFactory = gameStateMutationFactory
+    this.gameStateMutator = gameStateMutator
     this.socketControllersMap = socketControllersMap
     this.liveDiagnostics = liveDiagnostics
 
     this.logger(`Connection established: ${this.connectionId}.`)
 
-    this.gameStateManager.gameEventFactory.createPlayerJoinedEvent(this.connectionId)
+    this.gameStateMutationFactory.inputQueue.push(new JoinInput({ playerId: connectionId }))
 
     // publish gameState updates to client
-    this.gameStateManager.registerSubscription((gameState) => {
-      this.webSocket.send(JSON.stringify(new GameStateUpdateMessage({ gameState })))
+    this.gameStateMutator.mutationStore.subscribe((tick, mutations) => {
+      this.webSocket.send(JSON.stringify(new MutationStoreUpdateMessage({ tick, mutations })))
     })
 
     // process input from client
@@ -33,16 +43,16 @@ module.exports = class ServerSocketController {
 
       // handle player input messages
       if (message.messageType === PlayerInputMessage.name) {
-        const input = message.playerInput
-        input.playerId = this.connectionId
-        input.timestamp = Date.now()
+        const playerInput = new PlayerInput(message.playerInput)
+        playerInput.playerId = this.connectionId
 
         // diagnostics
         this.inputsSinceLastPing++
 
         // event factory
-        if (input.inputType === MoveInput.name) {
-          this.gameStateManager.gameEventFactory.createPlayerVectorChangedEvent(this.connectionId, input.direction)
+        if (playerInput.inputType === MoveInput.name) {
+          const moveInput = new MoveInput(playerInput)
+          this.gameStateMutationFactory.inputQueue.push(moveInput)
         }
       }
 
@@ -66,7 +76,8 @@ module.exports = class ServerSocketController {
 
     // handling what to do when clients disconnect from server
     this.webSocket.on('close', () => {
-      this.gameStateManager.gameEventFactory.createPlayerLeftEvent(this.connectionId)
+      // TODO: temp disabling
+      this.gameStateMutationFactory.inputQueue.push(new ExitInput({ playerId: connectionId }))
       this.socketControllersMap.delete(this.connectionId)
       this.logger(`Connection closed: ${this.connectionId}.`)
     })

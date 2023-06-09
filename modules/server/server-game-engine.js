@@ -9,9 +9,10 @@ const SmoothDiagnostic = require('../shared/util/smooth-diagnostic.js')
  * * 'tick' - A cycle of the game loop that is permitted to complete (make logic updates, process inputs, have side effects)
  */
 module.exports = class ServerGameEngine {
-  constructor (gameStateManager, liveDiagnostics) {
+  constructor (gameStateMutationFactory, gameStateMutator, liveDiagnostics) {
     this.logger = require('../shared/util/logger.js')(this.constructor.name)
-    this.gameStateManager = gameStateManager
+    this.gameStateMutationFactory = gameStateMutationFactory
+    this.gameStateMutator = gameStateMutator
     this.liveDiagnostics = liveDiagnostics
 
     // Length of a tick in milliseconds. The denominator is your desired framerate.
@@ -92,8 +93,14 @@ module.exports = class ServerGameEngine {
 
     // actually do game stuff
     const currentTickTs = this.lastTickTs + msSinceLastTick
-    // this.gameStateManager.update(this.lastTickTs, currentTickTs)
-    this.gameStateManager.stepForward()
+    // TODO: remove
+    // this.gameStateManager.stepForward()
+
+    const nextTick = this.ticks
+    const mutationsForNextTick = this.gameStateMutationFactory.computeAndExecuteMutationsForNextTick()
+    if (mutationsForNextTick.length){
+      this.gameStateMutator.mutationStore.addRange(nextTick, mutationsForNextTick)
+    }
 
     // finish this tick by progressing the lastTickTs marker
     this.lastTickTs = currentTickTs

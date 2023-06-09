@@ -2,16 +2,16 @@ const config = require('../shared/config.js')
 const SmoothDiagnostic = require('../shared/util/smooth-diagnostic.js')
 const PlayerInputMessage = require('../shared/models/socket-message/player-input-message.model')
 const PingMessage = require('../shared/models/socket-message/ping-message.model')
-const GameStateUpdateMessage = require('../shared/models/socket-message/game-state-update-message.model')
+const MutationStoreUpdateMessage = require('../shared/models/socket-message/mutation-store-update-message.model')
 
 /**
  * Handles communication with the game server via websocket connection
  */
 module.exports = class ClientSocketController {
-  constructor (clientGameEngine, gameStateManager, playerInputController, liveDiagnostics) {
+  constructor (clientGameEngine, gameStateMutator, playerInputController, liveDiagnostics) {
     this.logger = require('../shared/util/logger.js')(this.constructor.name)
     this.clientGameEngine = clientGameEngine
-    this.gameStateManager = gameStateManager
+    this.gameStateMutator = gameStateMutator
     this.playerInputController = playerInputController
     this.liveDiagnostics = liveDiagnostics
 
@@ -48,18 +48,22 @@ module.exports = class ClientSocketController {
     this.clientGameEngine.newUpdates++
     const message = JSON.parse(event.data)
 
-    if (message.messageType === GameStateUpdateMessage.name) {
-      this.gameStateManager.gameState = message.gameState
+    if (message.messageType === MutationStoreUpdateMessage.name) {
+      const updateMessage = new MutationStoreUpdateMessage(message)
+      this.gameStateMutator.mutationStore.addRange(updateMessage.tick, updateMessage.mutations)
+      this.gameStateMutator.stepForwardTillEnd()
+
       this.upsSD.update(1000 / (Date.now() - this.lastGameStateUpdate))
       this.liveDiagnostics.ups = Math.floor(this.upsSD.smoothValue)
       this.lastGameStateUpdate = Date.now()
     }
 
     if (message.messageType === PingMessage.name) {
-      this.pingSD.update(Date.now() - message.startTimestamp)
+      const pingMessage = new PingMessage(message)
+      this.pingSD.update(Date.now() - pingMessage.startTimestamp)
       this.liveDiagnostics.ping = Math.floor(this.pingSD.smoothValue)
-      this.liveDiagnostics.apm = message.apm
-      this.liveDiagnostics.tps = message.tps
+      this.liveDiagnostics.apm = pingMessage.apm
+      this.liveDiagnostics.tps = pingMessage.tps
     }
   }
 
