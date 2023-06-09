@@ -1,5 +1,5 @@
 #canvas {
-    /* Canvas has a set width and height. Css rule will stretch it to width of window. */
-    width: 100%;
-    border: 1px solid lightgrey;
+  /* Canvas has a set width and height. Css rule will stretch it to width of window. */
+  width: 100%;
+  border: 2px solid lightgrey;
 }
