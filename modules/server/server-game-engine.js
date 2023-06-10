@@ -9,7 +9,11 @@ const SmoothDiagnostic = require('../shared/util/smooth-diagnostic.js')
  * * 'tick' - A cycle of the game loop that is permitted to complete (make logic updates, process inputs, have side effects)
  */
 module.exports = class ServerGameEngine {
-  constructor (gameStateMutationFactory, gameStateMutator, liveDiagnostics) {
+  constructor ({
+    gameStateMutationFactory,
+    gameStateMutator,
+    liveDiagnostics
+  } = {}) {
     this.logger = require('../shared/util/logger.js')(this.constructor.name)
     this.gameStateMutationFactory = gameStateMutationFactory
     this.gameStateMutator = gameStateMutator
@@ -43,6 +47,10 @@ module.exports = class ServerGameEngine {
   start () {
     this.logger('Server game engine started.')
     setImmediate(this.gameLoop.bind(this))
+  }
+
+  stop () {
+    this.kill = 1
   }
 
   /**
@@ -93,8 +101,6 @@ module.exports = class ServerGameEngine {
 
     // actually do game stuff
     const currentTickTs = this.lastTickTs + msSinceLastTick
-    // TODO: remove
-    // this.gameStateManager.stepForward()
 
     const nextTick = this.ticks
     const mutationsForNextTick = this.gameStateMutationFactory.computeAndExecuteMutationsForNextTick()

@@ -1,12 +1,7 @@
 const SocketMessage = require('./socket-message')
 
-module.exports = class PingMessage extends SocketMessage {
+module.exports = class NewGameMessage extends SocketMessage {
   constructor(param) {
     super(param)
-
-    const { startTimestamp, apm, tps } = param
-    this.startTimestamp = startTimestamp
-    this.apm = apm
-    this.tps = tps
   }
 }

@@ -3,7 +3,7 @@ const VectorUtil = require('./util/geometry/vector-util')
 const ReplaceNodeMutation = require('./models/mutation/replace-node-mutation')
 const PointUtil = require('./util/geometry/point-util')
 module.exports = class GameStateMutationFactory {
-  constructor(gameState) {
+  constructor({ gameState } = {}) {
     this.inputQueue = []
     this.gameState = gameState
   }

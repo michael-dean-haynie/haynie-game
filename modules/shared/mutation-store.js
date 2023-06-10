@@ -1,8 +1,10 @@
+const { v4: uuidv4 } = require('uuid')
+
 module.exports = class MutationStore {
   mutationsByTick = new Map()
   tickSetSize = 0
   maxTick = 0
-  subscriptions = []
+  subscriptions = new Map()
 
   add(tick, mutation) {
     if (this.mutationsByTick.has(tick)) {
@@ -36,12 +38,18 @@ module.exports = class MutationStore {
   }
 
   subscribe(subscription) {
-    this.subscriptions.push(subscription)
+    const subKey = uuidv4()
+    this.subscriptions.set(subKey, subscription)
+    return subKey
+  }
+
+  unsubscribe(subKey) {
+    this.subscriptions.delete(subKey)
   }
 
   publish(tick, mutations) {
-    this.subscriptions.forEach(subscription => {
-      subscription(tick, mutations)
-    })
+    for (let [subKey, sub] of [...this.subscriptions]) {
+      sub(tick, mutations)
+    }
   }
 }

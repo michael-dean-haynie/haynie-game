@@ -1,8 +1,10 @@
-module.exports = class GameStateUpdateMessage {
+const SocketMessage = require('./socket-message')
+
+module.exports = class FastForwardMessage extends SocketMessage {
   constructor({
-    gameState
+    tickTuples
   } = {}) {
-    this.messageType = this.constructor.name
-    this.gameState = gameState
+    super({ tickTuples })
+    this.tickTuples = tickTuples
   }
 }

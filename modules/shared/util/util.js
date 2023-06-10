@@ -13,9 +13,15 @@ function isBetween (min, val, max) {
   return val >= min && val <= max
 }
 
+// crude copy by serializeing/deserializing (breaking obj references so game state mutations don't bleed)
+function cp(obj) {
+  return JSON.parse(JSON.stringify(obj))
+}
+
 
 module.exports = {
   getRandomColor,
   getRandomIntInclusive,
-  isBetween
+  isBetween,
+  cp
 }

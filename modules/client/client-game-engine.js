@@ -4,11 +4,17 @@ const SmoothDiagnostic = require('../shared/util/smooth-diagnostic.js')
  * TODO: esplain this is the thing that drives the client, what it's responsible for
  */
 module.exports = class ClientGameEngine {
-  constructor (gameStateMutator, renderer, liveDiagnostics) {
+  constructor ({
+    gameStateMutator,
+    renderer,
+    liveDiagnostics
+  } = {}) {
     this.logger = require('../shared/util/logger.js')(this.constructor.name)
     this.gameStateMutator = gameStateMutator
     this.renderer = renderer
     this.liveDiagnostics = liveDiagnostics
+
+    this.kill = false
 
     this.previousFrameTs = Date.now()
     this.frame = 0
@@ -20,7 +26,14 @@ module.exports = class ClientGameEngine {
     window.requestAnimationFrame(this.gameLoop.bind(this))
   }
 
+  stop() {
+    this.kill = true
+  }
+
   gameLoop () {
+    if (this.kill) {
+      return
+    }
     this.frame++
     const now = Date.now()
     this.updateFps(now, this.previousFrameTs)

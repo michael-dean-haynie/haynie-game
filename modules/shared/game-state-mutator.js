@@ -27,6 +27,18 @@ module.exports = class GameStateMutator {
     }
   }
 
+  stepBackward() {
+    const mutations = this.mutationStore.getMutationsByTick(this.tick)
+    for (let i = mutations.length - 1; i >= 0 ; i--) {
+      const mutation = mutations[i]
+      const mutationInst = this.instantiateMutation(mutation)
+      mutationInst.revert(this.gameState)
+    }
+
+    this.tick--
+    this.gameState.tick = this.tick
+  }
+
   instantiateMutation(mutation) {
     switch(mutation.mutationType) {
       case SpliceArrayMutation.name:
