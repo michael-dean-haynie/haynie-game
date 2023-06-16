@@ -27,10 +27,12 @@ module.exports = class ClientGameEngine {
   }
 
   stop() {
+    this.logger('stopping engine')
     this.kill = true
   }
 
   gameLoop () {
+    this.logger('entering game loop')
     if (this.kill) {
       return
     }

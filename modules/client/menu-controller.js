@@ -19,6 +19,7 @@ module.exports = class MenuController {
     this.inGameMenuDiv = document.getElementById('inGameMenu')
     this.exitGameBtn = document.getElementById('exitGameBtn')
     this.replayMenuDiv = document.getElementById('replayMenu')
+    this.slider = document.getElementById('slider')
     this.rewindBtn = document.getElementById('rewind')
     this.pauseBtn = document.getElementById('pause')
     this.playBtn = document.getElementById('play')
@@ -119,6 +120,8 @@ module.exports = class MenuController {
         const gameStateMutator = new GameStateMutator({ gameState, mutationStore })
         const renderer = new Renderer(document.getElementById('canvas'), new LiveDiagnostics())
         this.clientReplayEngine = new ClientReplayEngine( { gameStateMutator, renderer })
+
+        // TODO: configure slider. somewhere else bind change events?
 
         this.hideMenu()
         this.hideInGameMenu()

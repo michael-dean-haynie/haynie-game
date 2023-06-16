@@ -6,12 +6,14 @@ module.exports = class GameStateMutator {
     mutationStore,
     tick = 0
   } = {}) {
+    this.logger = require('../shared/util/logger')(this.constructor.name)
     this.gameState = gameState
     this.mutationStore = mutationStore
     this.tick = tick
   }
 
   stepForward() {
+    this.logger(`stepping forward [tick=${this.tick + 1}]`)
     this.tick++
     this.gameState.tick = this.tick
     const mutations = this.mutationStore.getMutationsByTick(this.tick)
@@ -28,6 +30,7 @@ module.exports = class GameStateMutator {
   }
 
   stepBackward() {
+    this.logger('stepping backward')
     const mutations = this.mutationStore.getMutationsByTick(this.tick)
     for (let i = mutations.length - 1; i >= 0 ; i--) {
       const mutation = mutations[i]

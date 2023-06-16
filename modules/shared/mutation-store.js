@@ -5,6 +5,7 @@ module.exports = class MutationStore {
   tickSetSize = 0
   maxTick = 0
   subscriptions = new Map()
+  logger = require('../shared/util/logger')(this.constructor.name)
 
   add(tick, mutation) {
     if (this.mutationsByTick.has(tick)) {
@@ -31,9 +32,11 @@ module.exports = class MutationStore {
   }
 
   getMutationsByTick(tick) {
+    // this.logger('entering GetMutationsByTick()')
     if (this.mutationsByTick.has(tick)){
       return this.mutationsByTick.get(tick)
     }
+    // this.logger('exiting GetMutationsByTick()')
     return []
   }
 

@@ -9,9 +9,11 @@ module.exports = class Renderer {
     this.canvas.height = config.gameHeight
 
     this.liveDiagnostics = liveDiagnostics
+    this.logger = require('../shared/util/logger')(this.constructor.name)
   }
 
   render (gameState) {
+    this.logger('rendering')
     this.context.clearRect(0, 0, this.canvas.width, this.canvas.height)
     gameState.players.forEach(player => {
       this.context.fillStyle = player.color
@@ -21,7 +23,7 @@ module.exports = class Renderer {
     })
 
     this.liveDiagnostics.ticks = gameState.tick
-    this.printDiagnostics()
+    // this.printDiagnostics() // TODO: fix and enable
   }
 
   // Invert the y-axis

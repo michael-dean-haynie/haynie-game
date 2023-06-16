@@ -9,7 +9,7 @@ module.exports = class ClientReplayEngine {
 
     // Length of a tick in milliseconds. The denominator is your desired framerate.
     // e.g. 1000 / 20 = 20 fps,  1000 / 60 = 60 fps
-    this.tickLengthMs = 1000 / 60
+    this.tickLengthMs = 1000 / 120 // keeping this high otherwise it will end up like twice as slow because request animation frame is like almost always 60fps
 
     this.paused = true
     this.inRewind = false
@@ -36,23 +36,40 @@ module.exports = class ClientReplayEngine {
   }
 
   gameLoop () {
+    this.logger('entering gameLoop()')
     if (this.paused) {
       return
     }
     const now = Date.now()
     const msSinceLastTick = now - this.lastTickTs
-    this.lastTickTs = now
 
     if (msSinceLastTick >= this.tickLengthMs) {
-      if (this.inRewind && this.tick > 0) {
-        this.gameStateMutator.stepBackward()
-        this.tick--
+      this.logger(`attempting tick [tick=${this.tick}]`)
+      this.lastTickTs = now
+
+      if (this.inRewind) {
+        if (this.tick <= 0) {
+          this.logger(`halting rewind at [tick=${this.tick}]`)
+          return
+        } else {
+          this.gameStateMutator.stepBackward()
+          this.tick--
+          this.draw()
+        }
       }
-      if (!this.inRewind && this.gameStateMutator.mutationStore.maxTick >= this.tick){
-        this.gameStateMutator.stepForward()
-        this.tick++
+      if (!this.inRewind) {
+        if (this.tick >= this.gameStateMutator.mutationStore.maxTick) {
+          this.logger(`halting play at [tick=${this.tick}]`)
+          return
+        } else {
+          this.gameStateMutator.stepForward()
+          this.tick++
+          this.draw()
+        }
       }
-      this.draw()
+    }
+    else {
+      this.logger(`not ticking this loop. [msSinceLastTick=${msSinceLastTick}]`);
     }
 
     window.requestAnimationFrame(this.gameLoop.bind(this))
