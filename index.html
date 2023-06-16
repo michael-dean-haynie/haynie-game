@@ -12,6 +12,27 @@
     <canvas id="canvas" width="0" height="0">
         Your browser does not support the HTML5 canvas tag.
     </canvas>
+
+    <div id="inGameMenu">
+        <button id="exitGameBtn">Exit Game</button>
+    </div>
+
+    <div id="replayMenu">
+        <div>
+            <input type="range" id="slider" name="tick" min="0" max="0">
+        </div>
+        <button id="rewind">Rewind</button>
+        <button id="pause">Pause</button>
+        <button id="play">Play</button>
+    </div>
+
+    <div id="menu">
+        <button id="newGameBtn">New Game</button>
+        <button id="joinGameBtn">Join Game</button>
+        <div id="replays"></div>
+    </div>
+
+
     <script type="module" src="index.js"></script>
 </body>
 </html>

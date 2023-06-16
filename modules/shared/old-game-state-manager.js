@@ -1,6 +1,6 @@
 const config = require('./config.js')
 
-module.exports = class GameStateManager {
+module.exports = class OldGameStateManager {
   constructor () {
     this.gameHeight = config.gameHeight
     this.gameWidth = config.gameWidth
@@ -11,6 +11,10 @@ module.exports = class GameStateManager {
     }
     this.stateHasChanged = true
     this.clientPingTsMap = new Map()
+  }
+
+  stepForward() {
+
   }
 
   update (lastTickTs, currentTickTs) {
