@@ -20,7 +20,7 @@ module.exports = class JoinInput extends PlayerInput {
         x: getRandomIntInclusive(width, gameState.gameWidth - width),
         y: getRandomIntInclusive(width, gameState.gameHeight - width)
       }),
-      moveSpeed: 10,
+      moveSpeed: getRandomIntInclusive(10, 15),
       vector: new Vector({
         x: 0,
         y: 0
